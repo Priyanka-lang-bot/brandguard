@@ -101,7 +101,8 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
       .single();
     if (vErr) throw vErr;
 
-    const result = await runCheck(d.content, d, kit);
+    // Seed drafts use the deterministic checks only: fast, stable, and well inside serverless time limits.
+    const result = await runCheck(d.content, d, kit, { ai: false });
     await admin.from("draft_versions").update({ checked: true, ai_checked: result.aiChecked }).eq("id", v1.id);
     const rows = result.findings.map((c: Candidate) => toRow(c, v1.id, draft.id));
     const { data: inserted, error: iErr } = await admin.from("findings").insert(rows).select("*");
@@ -112,7 +113,7 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
         draft_id: draft.id,
         actor_id: ids.creator,
         action: "checked",
-        detail: `${inserted!.length} findings${result.aiChecked ? "" : " (rule checks only)"}`,
+        detail: `${inserted!.length} findings (rule checks)`,
         version_no: 1,
       },
     ]);

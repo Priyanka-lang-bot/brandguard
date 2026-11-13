@@ -16,8 +16,12 @@ export async function runCheck(
   content: string,
   meta: { purpose: string; channel: string; title: string },
   kit: BrandKit,
+  opts: { ai?: boolean } = {},
 ): Promise<CheckResult> {
   const rules = deterministicChecks(content, kit);
+  if (opts.ai === false) {
+    return { findings: mergeFindings(rules, []), aiChecked: false, aiError: null, discarded: [] };
+  }
   if (!aiAvailable()) {
     return { findings: mergeFindings(rules, []), aiChecked: false, aiError: "AI checks are not configured", discarded: [] };
   }

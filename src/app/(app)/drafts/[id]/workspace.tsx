@@ -170,7 +170,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       {text}
       {p.current.checked && !p.current.ai_checked && (
         <span className="mt-1 block text-xs opacity-80">
-          Note: the AI pass was unavailable for this version, so only the rule-based checks (terminology, patterns) ran.
+          This version was checked with the rule-based checks only (terminology and patterns). Edit and re-check it to run the AI pass as well.
         </span>
       )}
     </div>
