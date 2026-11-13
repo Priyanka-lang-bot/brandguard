@@ -129,7 +129,7 @@ export const DEMO_DRAFTS = [
     status: "in_review" as const,
     content: `Board exams are coming!!! 📚
 
-Lumio is India's top study app, and our smart flashcards guarantee better marks. Start free with up to 5 study plans, or go all in with Lumio Premium for just ₹149 a month.
+Lumio is India's top study app, and our smart flashcards guarantee better marks. Start free today, or go all in with Lumio Premium for ₹199 a month.
 
 Our users love it. Click here to get started.`,
   },

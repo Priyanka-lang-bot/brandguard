@@ -98,6 +98,7 @@ export interface DraftVersion {
   content: string;
   source_file: string | null;
   note: string;
+  checked: boolean;
   ai_checked: boolean;
   created_by: string;
   created_at: string;

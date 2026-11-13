@@ -105,6 +105,7 @@ create table public.draft_versions (
   content text not null,
   source_file text,                         -- original upload name, if any
   note text not null default '',
+  checked boolean not null default false,     -- true when the engine ran on this version
   ai_checked boolean not null default false,  -- false when the AI pass was unavailable
   created_by uuid not null references auth.users (id),
   created_at timestamptz not null default now(),

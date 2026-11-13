@@ -27,14 +27,14 @@ assert.equal(deterministicChecks("Users love it", kit)[0].suggestion, "Learners"
 // Validator: real quote + real code kept; fake code / fake quote discarded.
 const content = DEMO_DRAFTS[0].content;
 const rep = validateAiFindings(content, [
-  { quote: "for just ₹149 a month", source_id: "FACT-1", explanation: "Price is ₹199.", suggestion: "for just ₹199 a month", severity: "high" },
+  { quote: "for ₹199 a month", source_id: "FACT-1", explanation: "x", suggestion: "for ₹199 a month or ₹1,999 a year", severity: "high" },
   { quote: "Lumio is the fastest app", source_id: "CLAIM-1", explanation: "x", suggestion: "y" },
   { quote: "Board exams", source_id: "RULE-99", explanation: "x", suggestion: "y" },
-  { quote: "up to 5  study plans", source_id: "fact-2", explanation: "Free plan has 3.", suggestion: "up to 3 study plans", severity: "high" },
+  { quote: "go all  in", source_id: "tone-1", explanation: "x", suggestion: "try", severity: "low" },
 ], kit);
 assert.equal(rep.kept.length, 2, JSON.stringify(rep, null, 1));
 assert.equal(rep.discarded.length, 2);
-assert.equal(rep.kept[1].quote, "up to 5 study plans");
+assert.equal(rep.kept[1].quote, "go all in");
 
 // Merge prefers AI fix when the rule match has none.
 const rules = deterministicChecks(content, kit);
