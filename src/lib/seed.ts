@@ -50,44 +50,54 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
   log(`workspace ${workspace_id}`);
 
   const ids = await ensureUsers(admin);
-  for (const u of DEMO_USERS) {
+  {
     const { error } = await admin
       .from("profiles")
-      .upsert({ id: ids[u.role], workspace_id, full_name: u.full_name, role: u.role });
+      .upsert(DEMO_USERS.map((u) => ({ id: ids[u.role], workspace_id, full_name: u.full_name, role: u.role })));
     if (error) throw error;
   }
   log("demo users ready");
 
   // Reset demo content: drafts by demo users and the whole Brand Kit.
   const demoIds = Object.values(ids);
-  await admin.from("drafts").delete().eq("workspace_id", workspace_id).in("author_id", demoIds);
-  await admin.from("guideline_rules").delete().eq("workspace_id", workspace_id);
-  await admin.from("terms").delete().eq("workspace_id", workspace_id);
-  await admin.from("facts").delete().eq("workspace_id", workspace_id);
+  await Promise.all([
+    admin.from("drafts").delete().eq("workspace_id", workspace_id).in("author_id", demoIds),
+    admin.from("guideline_rules").delete().eq("workspace_id", workspace_id),
+    admin.from("terms").delete().eq("workspace_id", workspace_id),
+    admin.from("facts").delete().eq("workspace_id", workspace_id),
+  ]);
 
-  const { data: rules, error: rErr } = await admin
-    .from("guideline_rules")
-    .insert(DEMO_RULES.map((r) => ({ ...r, patterns: [...r.patterns], workspace_id, created_by: ids.admin })))
-    .select("*");
-  if (rErr) throw rErr;
-  const { data: terms, error: tErr } = await admin
-    .from("terms")
-    .insert(DEMO_TERMS.map((t) => ({ ...t, banned: [...t.banned], workspace_id })))
-    .select("*")
-    .order("created_at");
-  if (tErr) throw tErr;
-  const { data: facts, error: fErr } = await admin
-    .from("facts")
-    .insert(DEMO_FACTS.map((f) => ({ ...f, workspace_id })))
-    .select("*");
-  if (fErr) throw fErr;
+  // Terms get staggered timestamps so their order (and the TERM-n codes derived from it) is identical everywhere.
+  const base = Date.now() - 60_000;
+  const [rulesRes, termsRes, factsRes] = await Promise.all([
+    admin
+      .from("guideline_rules")
+      .insert(DEMO_RULES.map((r) => ({ ...r, patterns: [...r.patterns], workspace_id, created_by: ids.admin })))
+      .select("*"),
+    admin
+      .from("terms")
+      .insert(
+        DEMO_TERMS.map((t, i) => ({ ...t, banned: [...t.banned], workspace_id, created_at: new Date(base + i * 1000).toISOString() })),
+      )
+      .select("*"),
+    admin
+      .from("facts")
+      .insert(DEMO_FACTS.map((f) => ({ ...f, workspace_id })))
+      .select("*"),
+  ]);
+  if (rulesRes.error) throw rulesRes.error;
+  if (termsRes.error) throw termsRes.error;
+  if (factsRes.error) throw factsRes.error;
+  const rules = rulesRes.data;
+  const terms = termsRes.data;
+  const facts = factsRes.data;
   log("brand kit loaded");
 
   // Keep term order identical to DEMO_TERMS so TERM-n codes are stable.
   const orderedTerms = DEMO_TERMS.map((d) => terms!.find((t) => t.preferred === d.preferred)!);
   const kit: BrandKit = { rules: rules!, terms: orderedTerms, facts: facts! };
 
-  for (const d of DEMO_DRAFTS) {
+  await Promise.all(DEMO_DRAFTS.map(async (d) => {
     const { data: draft, error } = await admin
       .from("drafts")
       .insert({ workspace_id, author_id: ids.creator, title: d.title, purpose: d.purpose, channel: d.channel, status: "draft" })
@@ -122,30 +132,32 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
       // Resolve every finding the way a creator would, then submit version 2.
       const now = new Date().toISOString();
       const resolutions: { id: string; start: number; end: number; text: string }[] = [];
-      for (const f of inserted!) {
-        const plan = SEED_RESOLUTIONS[f.quote];
-        let status: "accepted" | "edited" | "disputed";
-        let text: string | null = null;
-        let reason: string | null = null;
-        if (plan?.status === "disputed") {
-          status = "disputed";
-          reason = plan.reason!;
-        } else if (plan?.text) {
-          status = "edited";
-          text = plan.text;
-        } else if (f.suggestion) {
-          status = "accepted";
-          text = f.suggestion;
-        } else {
-          status = "disputed";
-          reason = "Reviewed and kept as written.";
-        }
-        await admin
-          .from("findings")
-          .update({ status, resolution_text: text, dispute_reason: reason, resolved_by: ids.creator, resolved_at: now })
-          .eq("id", f.id);
-        if (text !== null) resolutions.push({ id: f.id, start: f.start_idx, end: f.end_idx, text });
-      }
+      await Promise.all(
+        inserted!.map(async (f) => {
+          const plan = SEED_RESOLUTIONS[f.quote];
+          let status: "accepted" | "edited" | "disputed";
+          let text: string | null = null;
+          let reason: string | null = null;
+          if (plan?.status === "disputed") {
+            status = "disputed";
+            reason = plan.reason!;
+          } else if (plan?.text) {
+            status = "edited";
+            text = plan.text;
+          } else if (f.suggestion) {
+            status = "accepted";
+            text = f.suggestion;
+          } else {
+            status = "disputed";
+            reason = "Reviewed and kept as written.";
+          }
+          await admin
+            .from("findings")
+            .update({ status, resolution_text: text, dispute_reason: reason, resolved_by: ids.creator, resolved_at: now })
+            .eq("id", f.id);
+          if (text !== null) resolutions.push({ id: f.id, start: f.start_idx, end: f.end_idx, text });
+        }),
+      );
       const { text } = applyResolutions(d.content, resolutions);
       await admin
         .from("draft_versions")
@@ -160,6 +172,6 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
       });
     }
     log(`draft "${d.title}" seeded (${inserted!.length} findings, ai=${result.aiChecked})`);
-  }
+  }));
   return { workspace_id };
 }
