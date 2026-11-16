@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
   }
   // ?check=ai verifies the Gemini configuration without touching data.
   if (req.nextUrl.searchParams.get("check") === "ai") {
-    return NextResponse.json(await pingGemini());
+    const q = req.nextUrl.searchParams;
+    const models = (q.get("models") ?? "").split(",").map((m) => m.trim()).filter((m) => /^[\w.-]{3,60}$/.test(m)).slice(0, 8);
+    const thinking = q.get("thinking") ?? undefined;
+    return NextResponse.json(await pingGemini({ models, thinking }));
   }
   const log: string[] = [];
   try {

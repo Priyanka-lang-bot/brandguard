@@ -7,8 +7,12 @@ const ENDPOINT = (model: string) =>
 
 export const aiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 
-/** Thinking makes Gemini Flash far slower on long prompts; a structured check does not need it. */
-const NO_THINKING = { thinkingBudget: 0 };
+/** Thinking makes Gemini Flash far slower on long prompts; a structured check needs as little as possible.
+ *  Gemini 3+ uses thinkingLevel; older models use thinkingBudget. */
+export function lowThinking(model: string): Record<string, unknown> {
+  return /gemini-[3-9]/.test(model) ? { thinkingLevel: process.env.GEMINI_THINKING || "low" } : { thinkingBudget: 0 };
+}
+const NO_THINKING = lowThinking(MODEL);
 
 async function requestGemini(body: object, key: string, signal: AbortSignal) {
   return fetch(ENDPOINT(MODEL), {
@@ -77,7 +81,7 @@ export function friendlyAiError(msg: string | null): string {
 }
 
 /** Diagnostics for the setup route: is the API reachable, and which models answer quickly? */
-export async function pingGemini(): Promise<unknown> {
+export async function pingGemini(opts: { models?: string[]; thinking?: string } = {}): Promise<unknown> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { ok: false, reason: "no Gemini API key configured" };
   const timed = async (fn: () => Promise<Response>, ms: number) => {
@@ -104,7 +108,7 @@ export async function pingGemini(): Promise<unknown> {
       .map((m: { name: string }) => m.name.replace("models/", ""))
       .filter((n: string) => /flash/.test(n));
   } catch {}
-  const candidates = [MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.0-flash"].filter(
+  const candidates = (opts.models?.length ? opts.models : [MODEL]).filter(
     (m, i, arr) => arr.indexOf(m) === i,
   );
   const tries = await Promise.all(
@@ -116,7 +120,12 @@ export async function pingGemini(): Promise<unknown> {
             headers: { "content-type": "application/json", "x-goog-api-key": key },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: 'Return {"ok":true}' }] }],
-              generationConfig: { responseMimeType: "application/json", thinkingConfig: NO_THINKING },
+              generationConfig: {
+                responseMimeType: "application/json",
+                ...(opts.thinking === "none"
+                  ? {}
+                  : { thinkingConfig: opts.thinking ? { thinkingLevel: opts.thinking } : lowThinking(model) }),
+              },
             }),
           }),
         15000,
@@ -125,7 +134,7 @@ export async function pingGemini(): Promise<unknown> {
         model,
         status: r.status,
         ms: r.ms,
-        error: r.status === 200 ? undefined : r.status === 0 ? "no response" : friendlyAiError(`Gemini ${r.status}: ${r.body}`),
+        error: r.status === 200 ? undefined : r.status === 0 ? "no response" : r.body.replace(/\s+/g, " ").slice(0, 220),
       };
     }),
   );
