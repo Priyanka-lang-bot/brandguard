@@ -34,7 +34,7 @@ Open the deployed link and pick a demo role on the sign-in page. The demo brand,
 
 - Next.js 15 (App Router, Server Actions), TypeScript, Tailwind CSS v4
 - Supabase: Postgres, Auth, row-level security on every table
-- Google Gemini (`gemini-flash-latest` by default, configurable) via REST with a response schema
+- Google Gemini (`gemini-3.5-flash` by default with `gemini-3.5-flash-lite` as fallback, configurable) via REST with a response schema
 - `mammoth` (DOCX) and `unpdf` (PDF) for text extraction, `diff` for version comparison
 - Hosted on Vercel
 
@@ -50,7 +50,7 @@ Open the deployed link and pick a demo role on the sign-in page. The demo brand,
    | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service_role key (server only) |
    | `GEMINI_API_KEY` | Google AI Studio key |
    | `SETUP_TOKEN` | Any long random string |
-   | `GEMINI_MODEL` | Optional, defaults to `gemini-flash-latest` |
+   | `GEMINI_MODEL` | Optional, defaults to `gemini-3.5-flash` (fallback: `GEMINI_FALLBACK_MODEL`, default `gemini-3.5-flash-lite`) |
 
 3. Deploy, then open `https://<your-app>/api/setup?token=<SETUP_TOKEN>` once. This creates the demo users, Brand Kit and
    sample drafts. (Locally: `npm run seed`.)

@@ -1,7 +1,10 @@
 import type { BrandKit } from "../types";
 import type { RawAiFinding } from "./validate";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+// gemini-flash-latest stopped answering in Nov 2026 and the 2.x models are retired; 3.5 Flash answers in ~1-2s.
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+/** Used when the main model reports high demand (429/5xx). */
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
 const ENDPOINT = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
@@ -14,8 +17,8 @@ export function lowThinking(model: string): Record<string, unknown> {
 }
 const NO_THINKING = lowThinking(MODEL);
 
-async function requestGemini(body: object, key: string, signal: AbortSignal) {
-  return fetch(ENDPOINT(MODEL), {
+async function requestGemini(body: object, key: string, signal: AbortSignal, model = MODEL) {
+  return fetch(ENDPOINT(model), {
     method: "POST",
     signal,
     headers: { "content-type": "application/json", "x-goog-api-key": key },
@@ -42,10 +45,15 @@ async function callGemini(system: string, user: string, schema: object, timeoutM
       if (!/thinking/i.test(body)) throw new Error(`Gemini 400: ${body.slice(0, 300)}`);
       res = await requestGemini({ ...base, generationConfig: config }, key, ctrl.signal);
     }
-    // One retry for a transient overload, only while there is time left.
-    if ((res.status === 429 || res.status >= 500) && Date.now() - started < timeoutMs / 2) {
-      await new Promise((r) => setTimeout(r, 1500));
-      res = await requestGemini({ ...base, generationConfig: { ...config, thinkingConfig: NO_THINKING } }, key, ctrl.signal);
+    // On a transient overload, retry once on the fallback model while there is time left.
+    if ((res.status === 429 || res.status >= 500) && Date.now() - started < timeoutMs / 2 && FALLBACK_MODEL !== MODEL) {
+      await new Promise((r) => setTimeout(r, 800));
+      res = await requestGemini(
+        { ...base, generationConfig: { ...config, thinkingConfig: lowThinking(FALLBACK_MODEL) } },
+        key,
+        ctrl.signal,
+        FALLBACK_MODEL,
+      );
     }
     if (!res.ok) {
       const body = await res.text();
