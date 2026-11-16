@@ -76,15 +76,60 @@ export function friendlyAiError(msg: string | null): string {
   return "Gemini request failed";
 }
 
-/** Tiny round trip used by the setup route to verify the AI configuration. */
-export async function pingGemini(): Promise<{ ok: boolean; ms: number; model: string; reason?: string }> {
-  const t = Date.now();
+/** Diagnostics for the setup route: is the API reachable, and which models answer quickly? */
+export async function pingGemini(): Promise<unknown> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return { ok: false, reason: "no Gemini API key configured" };
+  const timed = async (fn: () => Promise<Response>, ms: number) => {
+    const t = Date.now();
+    try {
+      const res = await Promise.race([
+        fn(),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+      ]);
+      const body = await res.text();
+      return { status: res.status, ms: Date.now() - t, body };
+    } catch (e) {
+      return { status: 0, ms: Date.now() - t, body: e instanceof Error ? e.message : String(e) };
+    }
+  };
+  const list = await timed(
+    () => fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": key } }),
+    10000,
+  );
+  let available: string[] = [];
   try {
-    await callGemini("Reply with JSON.", 'Return {"ok": true}.', { type: "OBJECT", properties: { ok: { type: "BOOLEAN" } } }, 20000);
-    return { ok: true, ms: Date.now() - t, model: MODEL };
-  } catch (e) {
-    return { ok: false, ms: Date.now() - t, model: MODEL, reason: friendlyAiError(e instanceof Error ? e.message : String(e)) };
-  }
+    available = (JSON.parse(list.body).models ?? [])
+      .filter((m: { supportedGenerationMethods?: string[] }) => m.supportedGenerationMethods?.includes("generateContent"))
+      .map((m: { name: string }) => m.name.replace("models/", ""))
+      .filter((n: string) => /flash/.test(n));
+  } catch {}
+  const candidates = [MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.0-flash"].filter(
+    (m, i, arr) => arr.indexOf(m) === i,
+  );
+  const tries = await Promise.all(
+    candidates.map(async (model) => {
+      const r = await timed(
+        () =>
+          fetch(ENDPOINT(model), {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-goog-api-key": key },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: 'Return {"ok":true}' }] }],
+              generationConfig: { responseMimeType: "application/json", thinkingConfig: NO_THINKING },
+            }),
+          }),
+        15000,
+      );
+      return {
+        model,
+        status: r.status,
+        ms: r.ms,
+        error: r.status === 200 ? undefined : r.status === 0 ? "no response" : friendlyAiError(`Gemini ${r.status}: ${r.body}`),
+      };
+    }),
+  );
+  return { configuredModel: MODEL, listModels: { status: list.status, ms: list.ms, flashModels: available.slice(0, 30) }, tries };
 }
 
 export function kitAsPrompt(kit: BrandKit, today: string): string {
