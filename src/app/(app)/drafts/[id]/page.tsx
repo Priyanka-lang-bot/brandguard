@@ -41,19 +41,19 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="grid gap-6">
       <div>
-        <Link href="/dashboard" className="text-sm text-slate-500 hover:text-ink">
+        <Link href="/dashboard" className="text-sm text-mute hover:text-fg">
           ← Dashboard
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">{d.title}</h1>
           <StatusPill status={d.status} />
         </div>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-mute">
           {d.channel} · by {people[d.author_id]?.full_name ?? "Unknown"} · version {d.current_version}
           {d.purpose && (
             <>
               {" "}
-              · <span className="text-slate-500">Purpose:</span> {d.purpose}
+              · <span className="text-mute">Purpose:</span> {d.purpose}
             </>
           )}
         </p>

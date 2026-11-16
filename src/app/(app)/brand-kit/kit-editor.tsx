@@ -41,13 +41,13 @@ export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isA
   ];
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {pendingRules.length > 0 && (
         <PendingRules rules={pendingRules} isAdmin={isAdmin} run={run} pending={pending} />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200">
-        <div className="flex gap-1" role="tablist">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line">
+        <div className="flex gap-1 overflow-x-auto" role="tablist">
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -55,8 +55,8 @@ export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isA
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
               className={cx(
-                "-mb-px border-b-2 px-4 py-2 text-sm font-medium",
-                tab === t.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-ink",
+                "-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium sm:px-4",
+                tab === t.id ? "border-brand-600 text-brand-300" : "border-transparent text-mute hover:text-fg",
               )}
             >
               {t.label}
@@ -79,7 +79,7 @@ export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isA
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
           {error}
         </p>
       )}
@@ -96,28 +96,28 @@ type RunFn = (fn: () => Promise<Result>, after?: () => void) => void;
 
 function PendingRules({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: boolean; run: RunFn; pending: boolean }) {
   return (
-    <section className="card border-amber-200 bg-amber-50/50 p-5">
-      <h2 className="font-semibold text-amber-900">
+    <section className="card border-amber-500/30 bg-amber-500/5 p-5">
+      <h2 className="font-semibold text-amber-200">
         {rules.length} rule{rules.length === 1 ? "" : "s"} waiting for approval
       </h2>
-      <p className="text-sm text-amber-900/80">
+      <p className="text-sm text-amber-200/80">
         Extracted from an imported guideline document. They are not used in checks until an admin approves them.
       </p>
       <div className="mt-4 grid gap-3">
         {rules.map((r) => (
-          <div key={r.id} className="rounded-lg border border-amber-200 bg-white p-4">
+          <div key={r.id} className="rounded-lg border border-amber-500/30 bg-surface p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <code className="text-xs font-semibold text-slate-500">{r.code}</code>
-              <span className="text-xs text-slate-500">{CATEGORY_LABEL[r.category]}</span>
+              <code className="text-xs font-semibold text-mute">{r.code}</code>
+              <span className="text-xs text-mute">{CATEGORY_LABEL[r.category]}</span>
               <SeverityBadge severity={r.severity} />
-              <span className="ml-auto text-xs text-slate-400">{r.source.replace("pdf:", "from ")}</span>
+              <span className="ml-auto text-xs text-dim">{r.source.replace("pdf:", "from ")}</span>
             </div>
             <p className="mt-1 font-medium">{r.title}</p>
-            <p className="text-sm text-slate-600">{r.description}</p>
+            <p className="text-sm text-mute">{r.description}</p>
             {r.source_excerpt ? (
-              <blockquote className="mt-2 border-l-2 border-amber-300 pl-3 text-xs italic text-slate-500">“{r.source_excerpt}”</blockquote>
+              <blockquote className="mt-2 border-l-2 border-amber-500/40 pl-3 text-xs italic text-mute">“{r.source_excerpt}”</blockquote>
             ) : (
-              <p className="mt-2 text-xs text-amber-700">No exact source sentence was found in the document — check this one carefully.</p>
+              <p className="mt-2 text-xs text-amber-300">No exact source sentence was found in the document — check this one carefully.</p>
             )}
             {isAdmin && (
               <div className="mt-3 flex gap-2">
@@ -139,7 +139,7 @@ function PendingRules({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin
 function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: boolean; run: RunFn; pending: boolean }) {
   const [editing, setEditing] = useState<Rule | "new" | null>(null);
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {isAdmin && editing === null && (
         <div>
           <button className="btn-primary" onClick={() => setEditing("new")}>
@@ -153,18 +153,18 @@ function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: bo
         if (!list.length) return null;
         return (
           <section key={cat}>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">{CATEGORY_LABEL[cat]}</h2>
-            <div className="card divide-y divide-slate-100">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-mute">{CATEGORY_LABEL[cat]}</h2>
+            <div className="card divide-y divide-line">
               {list.map((r) => (
                 <div key={r.id} className="flex flex-wrap items-start gap-3 px-5 py-3">
-                  <code className="mt-0.5 w-16 shrink-0 text-xs font-semibold text-slate-500">{r.code}</code>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                  <code className="mt-0.5 w-14 shrink-0 text-xs font-semibold text-mute sm:w-16">{r.code}</code>
+                  <div className="min-w-0 basis-40 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{r.title}</span>
                       <SeverityBadge severity={r.severity} />
                     </div>
-                    <p className="text-sm text-slate-600">{r.description}</p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="text-sm text-mute">{r.description}</p>
+                    <p className="mt-1 text-xs text-dim">
                       {r.patterns.length ? `${r.patterns.length} exact pattern${r.patterns.length === 1 ? "" : "s"} + AI check` : "AI check"}
                       {r.source.startsWith("pdf:") && ` · imported ${r.source.replace("pdf:", "from ")}`}
                     </p>
@@ -175,7 +175,7 @@ function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: bo
                         Edit
                       </button>
                       <button
-                        className="btn-ghost btn-sm text-red-700"
+                        className="btn-ghost btn-sm text-red-300"
                         disabled={pending}
                         onClick={() => confirm(`Delete ${r.code}?`) && run(() => deleteRule(r.id))}
                       >
@@ -241,7 +241,7 @@ function RuleForm({ rule, run, pending, onClose }: { rule: Rule | null; run: Run
           onChange={(e) => setV({ ...v, patterns: e.target.value })}
           placeholder={"\\bguarantee(d)?\\b\n!{2,} => !"}
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-mute">
           Regular expressions matched without case. Add <code>{" => replacement"}</code> to give an automatic fix. Rules without patterns are
           still checked by the AI.
         </p>
@@ -266,7 +266,7 @@ function TermsTab({ terms, isAdmin, run, pending }: { terms: Term[]; isAdmin: bo
     setV(t === "new" ? { preferred: "", banned: "", note: "" } : { preferred: t.preferred, banned: t.banned.join(", "), note: t.note });
   };
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {isAdmin && editing === null && (
         <div>
           <button className="btn-primary" onClick={() => open("new")}>
@@ -304,7 +304,7 @@ function TermsTab({ terms, isAdmin, run, pending }: { terms: Term[]; isAdmin: bo
       )}
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-surface-2 text-left text-xs uppercase tracking-wide text-mute">
             <tr>
               <th className="px-4 py-2.5 font-medium">Code</th>
               <th className="px-4 py-2.5 font-medium">Use</th>
@@ -313,29 +313,29 @@ function TermsTab({ terms, isAdmin, run, pending }: { terms: Term[]; isAdmin: bo
               {isAdmin && <th />}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {terms.map((t, i) => (
               <tr key={t.id}>
                 <td className="px-4 py-3">
-                  <code className="text-xs font-semibold text-slate-500">TERM-{i + 1}</code>
+                  <code className="text-xs font-semibold text-mute">TERM-{i + 1}</code>
                 </td>
-                <td className="px-4 py-3 font-medium text-emerald-800">{t.preferred}</td>
+                <td className="px-4 py-3 font-medium text-emerald-300">{t.preferred}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {t.banned.map((b) => (
-                      <span key={b} className="rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-700 line-through">
+                      <span key={b} className="rounded bg-red-500/10 px-1.5 py-0.5 text-xs text-red-300 line-through">
                         {b}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className="hidden px-4 py-3 text-slate-600 md:table-cell">{t.note}</td>
+                <td className="hidden px-4 py-3 text-mute md:table-cell">{t.note}</td>
                 {isAdmin && (
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     <button className="btn-ghost btn-sm" onClick={() => open(t)}>
                       Edit
                     </button>
-                    <button className="btn-ghost btn-sm text-red-700" disabled={pending} onClick={() => confirm(`Delete "${t.preferred}"?`) && run(() => deleteTerm(t.id))}>
+                    <button className="btn-ghost btn-sm text-red-300" disabled={pending} onClick={() => confirm(`Delete "${t.preferred}"?`) && run(() => deleteTerm(t.id))}>
                       Delete
                     </button>
                   </td>
@@ -357,8 +357,8 @@ function FactsTab({ facts, isAdmin, run, pending, today }: { facts: Fact[]; isAd
     setV(f === "new" ? { topic: "", statement: "", valid_until: "" } : { topic: f.topic, statement: f.statement, valid_until: f.valid_until ?? "" });
   };
   return (
-    <div className="grid gap-4">
-      <p className="text-sm text-slate-600">
+    <div className="grid grid-cols-1 gap-4">
+      <p className="text-sm text-mute">
         Approved, current facts. A draft that contradicts one — or uses an expired one as if it were current — is flagged and the fix uses the
         approved wording.
       </p>
@@ -397,32 +397,32 @@ function FactsTab({ facts, isAdmin, run, pending, today }: { facts: Fact[]; isAd
           </div>
         </div>
       )}
-      <div className="card divide-y divide-slate-100">
+      <div className="card divide-y divide-line">
         {facts.map((f) => {
           const expired = f.valid_until !== null && f.valid_until < today;
           return (
             <div key={f.id} className="flex flex-wrap items-start gap-3 px-5 py-3">
-              <code className="mt-0.5 w-16 shrink-0 text-xs font-semibold text-slate-500">{f.code}</code>
+              <code className="mt-0.5 w-16 shrink-0 text-xs font-semibold text-mute">{f.code}</code>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{f.topic}</span>
                   {f.valid_until &&
                     (expired ? (
-                      <span className="rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
+                      <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-red-300 ring-1 ring-red-500/30">
                         Expired {f.valid_until}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-500">valid until {f.valid_until}</span>
+                      <span className="text-xs text-mute">valid until {f.valid_until}</span>
                     ))}
                 </div>
-                <p className={cx("text-sm", expired ? "text-slate-400 line-through" : "text-slate-700")}>{f.statement}</p>
+                <p className={cx("text-sm", expired ? "text-dim line-through" : "text-soft")}>{f.statement}</p>
               </div>
               {isAdmin && (
                 <div className="flex gap-1">
                   <button className="btn-ghost btn-sm" onClick={() => open(f)}>
                     Edit
                   </button>
-                  <button className="btn-ghost btn-sm text-red-700" disabled={pending} onClick={() => confirm(`Delete ${f.code}?`) && run(() => deleteFact(f.id))}>
+                  <button className="btn-ghost btn-sm text-red-300" disabled={pending} onClick={() => confirm(`Delete ${f.code}?`) && run(() => deleteFact(f.id))}>
                     Delete
                   </button>
                 </div>
@@ -441,20 +441,20 @@ function ImportTab({ aiReady, onDone }: { aiReady: boolean; onDone: () => void }
     <form action={action} className="card grid gap-4 p-6">
       <div>
         <h2 className="font-semibold">Import a brand guideline document</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-mute">
           Upload your guideline PDF or DOCX. BrandGuard extracts individual, checkable rules and quotes the sentence each one came from. Nothing goes
           live until you approve each rule.
         </p>
       </div>
-      {!aiReady && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">The AI key isn&apos;t configured on this server, so import is unavailable.</p>}
+      {!aiReady && <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300">The AI key isn&apos;t configured on this server, so import is unavailable.</p>}
       <input name="file" type="file" accept=".pdf,.docx,.txt,.md" required className="text-sm" aria-label="Guideline document" />
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
       )}
       {state?.ok && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
           {state.count} rules extracted and waiting for approval at the top of this page.{" "}
           <button type="button" className="underline" onClick={onDone}>
             Review them

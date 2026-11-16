@@ -69,12 +69,12 @@ export function DraftWorkspace(p: Props) {
       <StatusBanner {...p} counts={counts} current={current} />
 
       {error && (
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
           {error}
         </p>
       )}
 
-      <div className="flex gap-1 border-b border-slate-200" role="tablist">
+      <div className="flex gap-1 overflow-x-auto border-b border-line" role="tablist">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -82,8 +82,8 @@ export function DraftWorkspace(p: Props) {
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={cx(
-              "-mb-px border-b-2 px-4 py-2 text-sm font-medium",
-              tab === t.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-ink",
+              "-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium sm:px-4",
+              tab === t.id ? "border-brand-600 text-brand-300" : "border-transparent text-mute hover:text-fg",
             )}
           >
             {t.label}
@@ -114,10 +114,10 @@ export function DraftWorkspace(p: Props) {
 
 function StatusBanner(p: Props & { counts: { open: number; fixed: number; disputed: number }; current: DraftVersion }) {
   const { draft, counts } = p;
-  let tone = "border-slate-200 bg-white";
+  let tone = "border-line bg-surface";
   let text: React.ReactNode = null;
   if (draft.status === "approved") {
-    tone = "border-emerald-200 bg-emerald-50 text-emerald-900";
+    tone = "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
     text = (
       <>
         <strong>Approved</strong> by {p.lastDecision?.actor || "a reviewer"}. Version {draft.current_version} is cleared to publish.
@@ -125,7 +125,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (draft.status === "in_review") {
-    tone = "border-violet-200 bg-violet-50 text-violet-900";
+    tone = "border-violet-500/30 bg-violet-500/10 text-violet-200";
     text = p.canReview ? (
       <>
         <strong>Waiting for your decision.</strong> Review the findings and how the author resolved them
@@ -142,7 +142,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (draft.status === "changes_requested") {
-    tone = "border-amber-200 bg-amber-50 text-amber-900";
+    tone = "border-amber-500/30 bg-amber-500/10 text-amber-200";
     text = (
       <>
         <strong>{p.lastDecision?.actor || "The reviewer"} asked for changes:</strong> “{p.lastDecision?.detail}”
@@ -150,7 +150,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (p.canEdit) {
-    tone = counts.open ? "border-amber-200 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900";
+    tone = counts.open ? "border-amber-500/30 bg-amber-500/10 text-amber-200" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
     text = counts.open ? (
       <>
         <strong>{counts.open} finding{counts.open === 1 ? "" : "s"} to resolve.</strong> Accept the suggested fix, edit it, or dispute it
@@ -218,7 +218,7 @@ function FindingsTab(
       <div className="card grid gap-3 p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Edit draft</h2>
-          <span className="text-xs text-slate-500">Saving creates version {p.draft.current_version + 1} and checks it again.</span>
+          <span className="text-xs text-mute">Saving creates version {p.draft.current_version + 1} and checks it again.</span>
         </div>
         <textarea
           className="input min-h-[320px] leading-relaxed"
@@ -252,12 +252,12 @@ function FindingsTab(
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
       {/* Left: the text */}
       <section className="card self-start">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
-          <div className="text-sm text-slate-600">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
+          <div className="text-sm text-mute">
             {checked ? (
               <>
                 Checked text · <strong>version {checked.version_no}</strong>
-                {checked.source_file && <span className="text-slate-400"> · from {checked.source_file}</span>}
+                {checked.source_file && <span className="text-dim"> · from {checked.source_file}</span>}
               </>
             ) : (
               "No checked version yet"
@@ -265,7 +265,7 @@ function FindingsTab(
           </div>
           <div className="flex items-center gap-2">
             {counts.fixed > 0 && (
-              <label className="flex items-center gap-1.5 text-sm text-slate-600">
+              <label className="flex items-center gap-1.5 text-sm text-mute">
                 <input type="checkbox" checked={preview} onChange={(e) => setPreview(e.target.checked)} />
                 Preview with fixes
               </label>
@@ -288,22 +288,22 @@ function FindingsTab(
             <DiffView from={base} to={applied.text} />
           ) : needsEdit ? (
             <>
-              <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                 Showing the version the reviewer saw (v{current.version_no}). Click “Edit text” to change it — the new version is checked again.
               </p>
-              <div className="whitespace-pre-wrap leading-relaxed text-slate-800">{current.content}</div>
+              <div className="whitespace-pre-wrap leading-relaxed text-soft">{current.content}</div>
             </>
           ) : (
             <Highlighted content={base} findings={findings} active={active} onPick={setActive} />
           )}
         </div>
         {!preview && !needsEdit && findings.length > 0 && (
-          <div className="flex flex-wrap gap-3 border-t border-slate-100 px-5 py-2.5 text-xs text-slate-500">
-            <Legend cls="bg-red-100 decoration-red-500" label="High" />
-            <Legend cls="bg-amber-100 decoration-amber-500" label="Medium" />
-            <Legend cls="bg-sky-100 decoration-sky-500" label="Low" />
-            <Legend cls="bg-emerald-100 decoration-emerald-500" label="Fixed" />
-            <Legend cls="bg-orange-50 decoration-orange-400 decoration-dashed" label="Disputed" />
+          <div className="flex flex-wrap gap-3 border-t border-line px-5 py-2.5 text-xs text-mute">
+            <Legend cls="bg-red-500/20 decoration-red-500" label="High" />
+            <Legend cls="bg-amber-500/20 decoration-amber-500" label="Medium" />
+            <Legend cls="bg-sky-500/20 decoration-sky-500" label="Low" />
+            <Legend cls="bg-emerald-500/20 decoration-emerald-500" label="Fixed" />
+            <Legend cls="bg-orange-500/10 decoration-orange-400 decoration-dashed" label="Disputed" />
           </div>
         )}
       </section>
@@ -361,7 +361,7 @@ function FindingsTab(
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={cx("rounded-full px-2.5 py-1 font-medium capitalize", filter === f ? "bg-ink text-white" : "bg-white text-slate-600 ring-1 ring-slate-200")}
+                className={cx("rounded-full px-2.5 py-1 font-medium capitalize", filter === f ? "bg-brand-600 text-white" : "bg-surface text-mute ring-1 ring-line")}
               >
                 {f}
               </button>
@@ -373,7 +373,7 @@ function FindingsTab(
           <div className="card p-6 text-center">
             <div className="text-3xl">✓</div>
             <p className="mt-2 font-medium">No problems found</p>
-            <p className="mt-1 text-sm text-slate-500">Nothing in this draft breaks the Brand Kit{checked.ai_checked ? "" : " rule checks"}.</p>
+            <p className="mt-1 text-sm text-mute">Nothing in this draft breaks the Brand Kit{checked.ai_checked ? "" : " rule checks"}.</p>
           </div>
         )}
 
@@ -403,9 +403,9 @@ function Legend({ cls, label }: { cls: string; label: string }) {
 }
 
 const SEV_MARK = {
-  high: "bg-red-100 decoration-red-500",
-  medium: "bg-amber-100 decoration-amber-500",
-  low: "bg-sky-100 decoration-sky-500",
+  high: "bg-red-500/20 decoration-red-500",
+  medium: "bg-amber-500/20 decoration-amber-500",
+  low: "bg-sky-500/20 decoration-sky-500",
 };
 
 function Highlighted({
@@ -429,8 +429,8 @@ function Highlighted({
       f.status === "open"
         ? SEV_MARK[f.severity]
         : f.status === "disputed"
-          ? "bg-orange-50 decoration-orange-400 decoration-dashed"
-          : "bg-emerald-100 decoration-emerald-500";
+          ? "bg-orange-500/10 decoration-orange-400 decoration-dashed"
+          : "bg-emerald-500/20 decoration-emerald-500";
     parts.push(
       <mark
         key={f.id}
@@ -452,7 +452,7 @@ function Highlighted({
     cursor = f.end_idx;
   }
   parts.push(content.slice(cursor));
-  return <div className="whitespace-pre-wrap leading-[1.9] text-slate-800">{parts}</div>;
+  return <div className="whitespace-pre-wrap leading-[1.9] text-soft">{parts}</div>;
 }
 
 function FindingCard({
@@ -484,7 +484,7 @@ function FindingCard({
         onFocus();
         document.getElementById(`mark-${f.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       }}
-      className={cx("card p-4 transition", active && "ring-2 ring-brand-500", f.status !== "open" && "bg-slate-50/60")}
+      className={cx("card p-4 transition", active && "ring-2 ring-brand-500", f.status !== "open" && "bg-surface-2/60")}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -495,9 +495,9 @@ function FindingCard({
       </div>
 
       <p className="mt-2 text-sm">
-        <span className="rounded bg-red-50 px-1 text-red-800 line-through decoration-red-300">{f.quote}</span>
+        <span className="rounded bg-red-500/10 px-1 text-red-300 line-through decoration-red-300">{f.quote}</span>
       </p>
-      <p className="mt-2 text-sm text-slate-700">{f.explanation}</p>
+      <p className="mt-2 text-sm text-soft">{f.explanation}</p>
 
       <button
         type="button"
@@ -505,33 +505,33 @@ function FindingCard({
           e.stopPropagation();
           setShowSource((s) => !s);
         }}
-        className="mt-2 inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+        className="mt-2 inline-flex items-center gap-1 rounded-md bg-line px-2 py-0.5 text-xs font-medium text-soft hover:bg-line-strong"
         aria-expanded={showSource}
       >
         <span aria-hidden>📎</span> {f.source_label}
-        <span className="text-slate-400">· {f.engine === "ai" ? "AI, verified" : "rule match"}</span>
+        <span className="text-dim">· {f.engine === "ai" ? "AI, verified" : "rule match"}</span>
       </button>
       {showSource && sourceDetail && (
-        <blockquote className="mt-2 border-l-2 border-slate-300 pl-3 text-xs text-slate-600">{sourceDetail}</blockquote>
+        <blockquote className="mt-2 border-l-2 border-line-strong pl-3 text-xs text-mute">{sourceDetail}</blockquote>
       )}
 
       {f.status === "open" && f.suggestion && (
-        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-emerald-700">Suggested fix</span>
-          <p className="text-emerald-900">{f.suggestion || <em>(remove)</em>}</p>
+        <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm">
+          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">Suggested fix</span>
+          <p className="text-emerald-200">{f.suggestion || <em>(remove)</em>}</p>
         </div>
       )}
       {f.status === "open" && !f.suggestion && (
-        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">No automatic fix for this one — use Edit to write your own wording.</p>
+        <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-xs text-mute">No automatic fix for this one — use Edit to write your own wording.</p>
       )}
       {(f.status === "accepted" || f.status === "edited") && (
         <p className="mt-3 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-emerald-700">Replaced with</span>
-          <span className="block rounded bg-emerald-50 px-1 text-emerald-900">{f.resolution_text || <em>(removed)</em>}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">Replaced with</span>
+          <span className="block rounded bg-emerald-500/10 px-1 text-emerald-200">{f.resolution_text || <em>(removed)</em>}</span>
         </p>
       )}
       {f.status === "disputed" && (
-        <p className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900">
+        <p className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm text-orange-200">
           <span className="text-xs font-medium uppercase tracking-wide">Author disagrees</span>
           <span className="block">{f.dispute_reason}</span>
         </p>
@@ -558,7 +558,7 @@ function FindingCard({
           )}
           {mode === "edit" && (
             <div className="grid gap-2">
-              <label className="text-xs font-medium text-slate-600" htmlFor={`edit-${f.id}`}>
+              <label className="text-xs font-medium text-mute" htmlFor={`edit-${f.id}`}>
                 Replace “{f.quote.length > 40 ? f.quote.slice(0, 40) + "…" : f.quote}” with:
               </label>
               <textarea id={`edit-${f.id}`} className="input text-sm" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
@@ -584,7 +584,7 @@ function FindingCard({
           )}
           {mode === "dispute" && (
             <div className="grid gap-2">
-              <label className="text-xs font-medium text-slate-600" htmlFor={`dispute-${f.id}`}>
+              <label className="text-xs font-medium text-mute" htmlFor={`dispute-${f.id}`}>
                 Why is this not a problem? The reviewer sees your reason.
               </label>
               <textarea
@@ -639,13 +639,13 @@ function ReviewPanel({
 }) {
   const [comment, setComment] = useState("");
   return (
-    <div className="card grid gap-3 border-violet-200 p-4 ring-1 ring-violet-100">
+    <div className="card grid gap-3 border-violet-500/30 p-4 ring-1 ring-violet-500/20">
       <h2 className="font-semibold">Your review</h2>
-      <ul className="text-sm text-slate-600">
+      <ul className="text-sm text-mute">
         <li>
           {counts.fixed} fix{counts.fixed === 1 ? "" : "es"} applied by the author
         </li>
-        <li className={counts.disputed ? "font-medium text-orange-700" : ""}>
+        <li className={counts.disputed ? "font-medium text-orange-300" : ""}>
           {counts.disputed} disputed finding{counts.disputed === 1 ? "" : "s"} — your call
         </li>
       </ul>
@@ -674,14 +674,14 @@ function ReviewPanel({
 function DiffView({ from, to }: { from: string; to: string }) {
   const parts = diffWords(from, to);
   return (
-    <div className="whitespace-pre-wrap leading-[1.9] text-slate-800">
+    <div className="whitespace-pre-wrap leading-[1.9] text-soft">
       {parts.map((part, i) =>
         part.added ? (
-          <ins key={i} className="rounded-sm bg-emerald-100 px-0.5 text-emerald-900 no-underline">
+          <ins key={i} className="rounded-sm bg-emerald-500/20 px-0.5 text-emerald-200 no-underline">
             {part.value}
           </ins>
         ) : part.removed ? (
-          <del key={i} className="rounded-sm bg-red-100 px-0.5 text-red-800">
+          <del key={i} className="rounded-sm bg-red-500/20 px-0.5 text-red-300">
             {part.value}
           </del>
         ) : (
@@ -700,17 +700,17 @@ function ChangesTab({ versions, current, checked }: { versions: DraftVersion[]; 
   const to = sorted.find((v) => v.version_no === toNo)!;
   return (
     <section className="card">
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-5 py-3 text-sm">
-        <span className="text-slate-600">Compare</span>
-        <select className="rounded-md border border-slate-300 px-2 py-1" value={fromNo} onChange={(e) => setFromNo(+e.target.value)}>
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3 text-sm">
+        <span className="text-mute">Compare</span>
+        <select className="rounded-md border border-line-strong px-2 py-1" value={fromNo} onChange={(e) => setFromNo(+e.target.value)}>
           {sorted.map((v) => (
             <option key={v.id} value={v.version_no}>
               v{v.version_no} — {v.note || "version"}
             </option>
           ))}
         </select>
-        <span className="text-slate-400">→</span>
-        <select className="rounded-md border border-slate-300 px-2 py-1" value={toNo} onChange={(e) => setToNo(+e.target.value)}>
+        <span className="text-dim">→</span>
+        <select className="rounded-md border border-line-strong px-2 py-1" value={toNo} onChange={(e) => setToNo(+e.target.value)}>
           {sorted.map((v) => (
             <option key={v.id} value={v.version_no}>
               v{v.version_no} — {v.note || "version"}
@@ -724,7 +724,7 @@ function ChangesTab({ versions, current, checked }: { versions: DraftVersion[]; 
         )}
       </div>
       <div className="px-5 py-4">
-        {from.id === to.id ? <p className="text-sm text-slate-500">Pick two different versions to see what changed.</p> : <DiffView from={from.content} to={to.content} />}
+        {from.id === to.id ? <p className="text-sm text-mute">Pick two different versions to see what changed.</p> : <DiffView from={from.content} to={to.content} />}
       </div>
     </section>
   );
@@ -748,13 +748,13 @@ function HistoryTab({
           <div key={v.id} className="card">
             <button className="flex w-full items-center justify-between gap-4 px-5 py-3 text-left" onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
               <span>
-                <strong>Version {v.version_no}</strong> <span className="text-sm text-slate-500">· {v.note}</span>
+                <strong>Version {v.version_no}</strong> <span className="text-sm text-mute">· {v.note}</span>
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-mute">
                 {v.checked ? `${fs.length} finding${fs.length === 1 ? "" : "s"}` : "not checked"} · {people[v.created_by]?.full_name} · {timeAgo(v.created_at)}
               </span>
             </button>
-            {open === v.id && <div className="whitespace-pre-wrap border-t border-slate-100 px-5 py-4 text-sm leading-relaxed text-slate-800">{v.content}</div>}
+            {open === v.id && <div className="whitespace-pre-wrap border-t border-line px-5 py-4 text-sm leading-relaxed text-soft">{v.content}</div>}
           </div>
         );
       })}
@@ -790,20 +790,20 @@ function ActivityTab({
   const [comment, setComment] = useState("");
   return (
     <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
-      <ol className="card divide-y divide-slate-100">
+      <ol className="card divide-y divide-line">
         {events.map((e) => {
           const who = e.actor_id ? people[e.actor_id] : null;
           return (
             <li key={e.id} className="flex gap-3 px-5 py-3 text-sm">
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-line-strong" />
               <div className="min-w-0 flex-1">
                 <p>
                   <strong>{who?.full_name ?? "System"}</strong> {who && <RoleBadge role={who.role} />} {ACTION_LABEL[e.action] ?? e.action}
-                  {e.version_no ? <span className="text-slate-500"> · v{e.version_no}</span> : null}
+                  {e.version_no ? <span className="text-mute"> · v{e.version_no}</span> : null}
                 </p>
-                {e.detail && <p className="mt-0.5 text-slate-600">{e.detail}</p>}
+                {e.detail && <p className="mt-0.5 text-mute">{e.detail}</p>}
               </div>
-              <time className="shrink-0 text-xs text-slate-400" dateTime={e.created_at} title={new Date(e.created_at).toLocaleString()}>
+              <time className="shrink-0 text-xs text-dim" dateTime={e.created_at} title={new Date(e.created_at).toLocaleString()}>
                 {timeAgo(e.created_at)}
               </time>
             </li>

@@ -13,7 +13,7 @@ export default async function BrandKitPage() {
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Brand Kit</h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-600">
+        <p className="mt-1 max-w-3xl text-sm text-mute">
           Every finding BrandGuard shows must cite one of these sources. Change a rule, term or fact here and the next check
           uses it straight away. {profile.role === "admin" ? "You can edit everything on this page." : "Only admins can edit it."}
         </p>

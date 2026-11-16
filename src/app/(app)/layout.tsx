@@ -10,8 +10,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const isDemo = user.email?.endsWith("@brandguard.demo");
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6">
+      <header className="sticky top-0 z-20 border-b border-line bg-bg/75 backdrop-blur-md">
+        <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2 sm:px-6">
           <Link href="/dashboard" aria-label="BrandGuard home">
             <Logo />
           </Link>
@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {profile.role !== "reviewer" && <NavLink href="/drafts/new">New draft</NavLink>}
             <NavLink href="/brand-kit">Brand Kit</NavLink>
           </nav>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {isDemo ? (
               <RoleSwitcher current={profile.role} />
             ) : (

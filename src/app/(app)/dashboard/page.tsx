@@ -35,7 +35,7 @@ export default async function Dashboard() {
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-slate-500">Lumio workspace</p>
+          <p className="text-sm text-mute">Lumio workspace</p>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome, {profile.full_name.split(" ")[0]}</h1>
         </div>
         {profile.role !== "reviewer" && (
@@ -51,7 +51,7 @@ export default async function Dashboard() {
         {stats.map((s) => (
           <div key={s.label} className="card px-4 py-3">
             <div className="text-2xl font-semibold tabular-nums">{s.value}</div>
-            <div className="text-xs text-slate-500">{s.label}</div>
+            <div className="text-xs text-mute">{s.label}</div>
           </div>
         ))}
       </section>
@@ -97,9 +97,9 @@ function GuideCard({ role, hasQueue }: { role: string; hasQueue: boolean }) {
             "Switch to Reviewer (top right) to approve it.",
           ];
   return (
-    <section className="card border-brand-100 bg-brand-50/60 p-5">
-      <h2 className="text-sm font-semibold text-brand-700">How to try BrandGuard as {role}</h2>
-      <ol className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="card border-brand-500/20 bg-brand-500/10 p-5">
+      <h2 className="text-sm font-semibold text-brand-300">How to try BrandGuard as {role}</h2>
+      <ol className="mt-3 grid gap-2 text-sm text-soft sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
           <li key={i} className="flex gap-2">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white">
@@ -137,11 +137,11 @@ function DraftTable({
         )}
       </h2>
       {drafts.length === 0 ? (
-        <p className="card px-4 py-6 text-center text-sm text-slate-500">{empty}</p>
+        <p className="card px-4 py-6 text-center text-sm text-mute">{empty}</p>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-surface-2 text-left text-xs uppercase tracking-wide text-mute">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Title</th>
                 <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Channel</th>
@@ -151,26 +151,26 @@ function DraftTable({
                 <th className="hidden px-4 py-2.5 text-right font-medium md:table-cell">Updated</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {drafts.map((d) => {
                 const open = ["draft", "changes_requested"].includes(d.status) ? openCount(d) : 0;
                 return (
-                  <tr key={d.id} className="hover:bg-slate-50">
+                  <tr key={d.id} className="hover:bg-surface-2">
                     <td className="px-4 py-3">
-                      <Link href={`/drafts/${d.id}`} className="font-medium text-ink hover:text-brand-700 hover:underline">
+                      <Link href={`/drafts/${d.id}`} className="font-medium text-fg hover:text-brand-300 hover:underline">
                         {d.title}
                       </Link>
-                      <div className="text-xs text-slate-500">v{d.current_version}</div>
+                      <div className="text-xs text-mute">v{d.current_version}</div>
                     </td>
-                    <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">{d.channel}</td>
-                    <td className="hidden px-4 py-3 text-slate-600 md:table-cell">{people[d.author_id]?.full_name ?? "—"}</td>
+                    <td className="hidden px-4 py-3 text-mute sm:table-cell">{d.channel}</td>
+                    <td className="hidden px-4 py-3 text-mute md:table-cell">{people[d.author_id]?.full_name ?? "—"}</td>
                     <td className="px-4 py-3">
                       <StatusPill status={d.status} />
                     </td>
                     <td className="hidden px-4 py-3 sm:table-cell">
-                      {open ? <span className="font-medium text-amber-700">{open}</span> : <span className="text-slate-400">—</span>}
+                      {open ? <span className="font-medium text-amber-300">{open}</span> : <span className="text-dim">—</span>}
                     </td>
-                    <td className="hidden px-4 py-3 text-right text-slate-500 md:table-cell">{timeAgo(d.updated_at)}</td>
+                    <td className="hidden px-4 py-3 text-right text-mute md:table-cell">{timeAgo(d.updated_at)}</td>
                   </tr>
                 );
               })}

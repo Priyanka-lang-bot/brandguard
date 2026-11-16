@@ -46,8 +46,8 @@ export function NewDraftForm() {
 
   return (
     <form ref={form} action={action} className="card mt-6 grid gap-5 p-6">
-      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm">
-        <span className="text-slate-600">No content handy? Try a sample:</span>
+      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-surface-2 px-3 py-2 text-sm">
+        <span className="text-mute">No content handy? Try a sample:</span>
         {SAMPLES.map((s) => (
           <button key={s.label} type="button" onClick={() => fill(s)} className="btn-secondary btn-sm">
             {s.label}
@@ -78,11 +78,11 @@ export function NewDraftForm() {
           className="input"
           placeholder="e.g. Get students preparing for exams to try the free plan"
         />
-        <p className="mt-1 text-xs text-slate-500">Suggested fixes are written to keep this purpose intact.</p>
+        <p className="mt-1 text-xs text-mute">Suggested fixes are written to keep this purpose intact.</p>
       </div>
 
       <div>
-        <div className="mb-2 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm" role="tablist">
+        <div className="mb-2 flex gap-1 rounded-lg bg-line p-1 text-sm" role="tablist">
           {(["paste", "upload"] as const).map((m) => (
             <button
               key={m}
@@ -90,7 +90,7 @@ export function NewDraftForm() {
               role="tab"
               aria-selected={mode === m}
               onClick={() => setMode(m)}
-              className={`flex-1 rounded-md px-3 py-1.5 font-medium ${mode === m ? "bg-white shadow-xs" : "text-slate-600"}`}
+              className={`flex-1 rounded-md px-3 py-1.5 font-medium ${mode === m ? "bg-surface shadow-xs" : "text-mute"}`}
             >
               {m === "paste" ? "Paste text" : "Upload a file (.docx, .pdf, .txt)"}
             </button>
@@ -104,21 +104,21 @@ export function NewDraftForm() {
             placeholder="Paste your draft here…"
           />
         ) : (
-          <div className="rounded-lg border-2 border-dashed border-slate-300 p-6 text-center">
+          <div className="rounded-lg border-2 border-dashed border-line-strong p-6 text-center">
             <input name="file" type="file" accept=".docx,.pdf,.txt,.md" className="text-sm" aria-label="Upload a file" />
-            <p className="mt-2 text-xs text-slate-500">Up to 4 MB. Text is extracted; the original layout is not checked yet.</p>
+            <p className="mt-2 text-xs text-mute">Up to 4 MB. Text is extracted; the original layout is not checked yet.</p>
           </div>
         )}
       </div>
 
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
       )}
 
       <div className="flex items-center justify-end gap-3">
-        {pending && <span className="text-sm text-slate-500">Checking against the Brand Kit… this takes a few seconds.</span>}
+        {pending && <span className="text-sm text-mute">Checking against the Brand Kit… this takes a few seconds.</span>}
         <button className="btn-primary" disabled={pending}>
           {pending ? "Checking…" : "Check draft"}
         </button>
