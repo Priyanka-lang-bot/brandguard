@@ -79,7 +79,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             ))}
           </div>
           <details className="mt-6 text-sm">
-            <summary className="cursor-pointer text-mute hover:text-fg">Sign in with email instead</summary>
+            <summary className="cursor-pointer text-mute hover:text-fg">Sign in or create an account with email</summary>
             <LoginForm />
           </details>
         </section>

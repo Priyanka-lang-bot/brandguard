@@ -1,22 +1,47 @@
 "use client";
 
-import { useActionState } from "react";
-import { signIn } from "@/app/actions/auth";
+import { useActionState, useState } from "react";
+import { signIn, signUp } from "@/app/actions/auth";
 
 export function LoginForm() {
-  const [state, action, pending] = useActionState(signIn, null);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [inState, inAction, inPending] = useActionState(signIn, null);
+  const [upState, upAction, upPending] = useActionState(signUp, null);
+  const signup = mode === "signup";
+  const state = signup ? upState : inState;
+  const pending = signup ? upPending : inPending;
   return (
-    <form action={action} className="mt-4 grid gap-3">
+    <form action={signup ? upAction : inAction} className="mt-4 grid gap-3" key={mode}>
+      {signup && (
+        <div>
+          <label className="label" htmlFor="full_name">Your name</label>
+          <input id="full_name" name="full_name" required minLength={2} className="input" autoComplete="name" />
+        </div>
+      )}
       <div>
         <label className="label" htmlFor="email">Email</label>
         <input id="email" name="email" type="email" required className="input" autoComplete="email" />
       </div>
       <div>
         <label className="label" htmlFor="password">Password</label>
-        <input id="password" name="password" type="password" required className="input" autoComplete="current-password" />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          minLength={signup ? 8 : undefined}
+          className="input"
+          autoComplete={signup ? "new-password" : "current-password"}
+        />
+        {signup && <p className="mt-1 text-xs text-dim">At least 8 characters. You join the Lumio demo workspace as a creator.</p>}
       </div>
       {state?.error && <p role="alert" className="text-sm text-red-300">{state.error}</p>}
-      <button className="btn-primary" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
+      <button className="btn-primary" disabled={pending}>
+        {pending ? (signup ? "Creating account…" : "Signing in…") : signup ? "Create account" : "Sign in"}
+      </button>
+      <button type="button" className="btn-ghost btn-sm justify-self-center" onClick={() => setMode(signup ? "signin" : "signup")}>
+        {signup ? "Already have an account? Sign in" : "New here? Create an account"}
+      </button>
     </form>
   );
 }

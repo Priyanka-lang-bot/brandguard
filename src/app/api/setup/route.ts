@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { seedDemo } from "@/lib/seed";
 import { createServiceClient } from "@/lib/supabase/server";
+import { pingGemini } from "@/lib/engine/gemini";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -16,6 +17,10 @@ export async function GET(req: NextRequest) {
   }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY is not set" }, { status: 500 });
+  }
+  // ?check=ai verifies the Gemini configuration without touching data.
+  if (req.nextUrl.searchParams.get("check") === "ai") {
+    return NextResponse.json(await pingGemini());
   }
   const log: string[] = [];
   try {

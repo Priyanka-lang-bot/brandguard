@@ -123,7 +123,7 @@ export async function seedDemo(admin: SupabaseClient, log: (m: string) => void =
         draft_id: draft.id,
         actor_id: ids.creator,
         action: "checked",
-        detail: `${inserted!.length} findings (rule checks)`,
+        detail: `${inserted!.length} findings — rule checks only (demo data is seeded without the AI pass)`,
         version_no: 1,
       },
     ]);

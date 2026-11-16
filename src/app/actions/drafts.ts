@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyAiError } from "@/lib/engine/gemini";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { loadKit, requireProfile } from "@/lib/data";
@@ -80,7 +81,7 @@ async function addCheckedVersion(
     draft.id,
     userId,
     "checked",
-    `${rows.length} finding${rows.length === 1 ? "" : "s"}${result.aiChecked ? "" : " — rule checks only (AI unavailable)"}`,
+    `${rows.length} finding${rows.length === 1 ? "" : "s"}${result.aiChecked ? " (rules + AI)" : ` — rule checks only (AI pass failed: ${friendlyAiError(result.aiError)})`}`,
     version_no,
   );
   return { version: version as DraftVersion, result };

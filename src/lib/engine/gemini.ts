@@ -7,35 +7,83 @@ const ENDPOINT = (model: string) =>
 
 export const aiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 
-async function callGemini(system: string, user: string, schema: object, timeoutMs = 45000): Promise<unknown> {
+/** Thinking makes Gemini Flash far slower on long prompts; a structured check does not need it. */
+const NO_THINKING = { thinkingBudget: 0 };
+
+async function requestGemini(body: object, key: string, signal: AbortSignal) {
+  return fetch(ENDPOINT(MODEL), {
+    method: "POST",
+    signal,
+    headers: { "content-type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify(body),
+  });
+}
+
+async function callGemini(system: string, user: string, schema: object, timeoutMs = 40000): Promise<unknown> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not set");
   const ctrl = new AbortController();
+  const started = Date.now();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const base = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: user }] }],
+  };
+  const config = { temperature: 0.1, responseMimeType: "application/json", responseSchema: schema };
   try {
-    const res = await fetch(ENDPOINT(MODEL), {
-      method: "POST",
-      signal: ctrl.signal,
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: "user", parts: [{ text: user }] }],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: "application/json",
-          responseSchema: schema,
-        },
-      }),
-    });
+    let res = await requestGemini({ ...base, generationConfig: { ...config, thinkingConfig: NO_THINKING } }, key, ctrl.signal);
+    // Some models reject a zero thinking budget; retry once with the model's default.
+    if (res.status === 400) {
+      const body = await res.text();
+      if (!/thinking/i.test(body)) throw new Error(`Gemini 400: ${body.slice(0, 300)}`);
+      res = await requestGemini({ ...base, generationConfig: config }, key, ctrl.signal);
+    }
+    // One retry for a transient overload, only while there is time left.
+    if ((res.status === 429 || res.status >= 500) && Date.now() - started < timeoutMs / 2) {
+      await new Promise((r) => setTimeout(r, 1500));
+      res = await requestGemini({ ...base, generationConfig: { ...config, thinkingConfig: NO_THINKING } }, key, ctrl.signal);
+    }
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`Gemini ${res.status}: ${body.slice(0, 300)}`);
     }
     const data = await res.json();
     const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-    return JSON.parse(text);
+    if (!text) throw new Error(`Gemini returned no content (${data?.candidates?.[0]?.finishReason ?? "no candidates"})`);
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error("Gemini returned malformed JSON");
+    }
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") throw new Error(`Gemini timed out after ${Math.round(timeoutMs / 1000)}s`);
+    throw e;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** Short, user-safe reason for an AI failure (never includes keys or raw bodies). */
+export function friendlyAiError(msg: string | null): string {
+  if (!msg) return "unknown error";
+  if (/not set|not configured/i.test(msg)) return "no Gemini API key configured";
+  if (/timed out/i.test(msg)) return "Gemini timed out";
+  if (/Gemini 429/.test(msg)) return "Gemini rate limit reached";
+  if (/Gemini 40[13]/.test(msg)) return "Gemini rejected the API key";
+  if (/Gemini 404/.test(msg)) return "Gemini model not found";
+  if (/Gemini 5\d\d/.test(msg)) return "Gemini is temporarily unavailable";
+  if (/malformed|no content/i.test(msg)) return "Gemini returned an unusable response";
+  return "Gemini request failed";
+}
+
+/** Tiny round trip used by the setup route to verify the AI configuration. */
+export async function pingGemini(): Promise<{ ok: boolean; ms: number; model: string; reason?: string }> {
+  const t = Date.now();
+  try {
+    await callGemini("Reply with JSON.", 'Return {"ok": true}.', { type: "OBJECT", properties: { ok: { type: "BOOLEAN" } } }, 20000);
+    return { ok: true, ms: Date.now() - t, model: MODEL };
+  } catch (e) {
+    return { ok: false, ms: Date.now() - t, model: MODEL, reason: friendlyAiError(e instanceof Error ? e.message : String(e)) };
   }
 }
 
