@@ -5,7 +5,7 @@ import { DEMO_RULES, DEMO_TERMS, DEMO_FACTS, DEMO_DRAFTS } from "../src/lib/demo
 import type { BrandKit } from "../src/lib/types";
 
 const kit: BrandKit = {
-  rules: DEMO_RULES.map((r, i) => ({ ...r, id: `r${i}`, patterns: [...r.patterns], status: "active", source: "manual" })) as any,
+  rules: DEMO_RULES.map((r, i) => ({ ...r, id: `r${i}`, patterns: [...r.patterns], status: "active" as const, source: "manual" })) as unknown as BrandKit["rules"],
   terms: DEMO_TERMS.map((t, i) => ({ ...t, id: `t${i}`, banned: [...t.banned] })),
   facts: DEMO_FACTS.map((f, i) => ({ ...f, id: `f${i}` })),
 };
