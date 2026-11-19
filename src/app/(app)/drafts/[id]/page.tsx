@@ -61,7 +61,7 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
           ← Dashboard
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{d.title}</h1>
+          <h1 className="page-title">{d.title}</h1>
           <StatusPill status={d.status} />
         </div>
         <p className="mt-1 text-sm text-mute">

@@ -15,7 +15,7 @@ const KIND_LABEL: Record<ConfidentialEntry["kind"], string> = {
 
 export function SchemaNotice() {
   return (
-    <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
       This section needs the database update in <code>supabase/migrations/0002_final_round.sql</code>. Run it once in the Supabase SQL editor
       and reload this page.
     </p>
@@ -50,11 +50,11 @@ export function VisualTab({
           {colors.length === 0 && <p className="px-5 py-4 text-sm text-mute">No colours yet, so images are not compared against a palette.</p>}
           {colors.map((col) => (
             <div key={col.id} className="flex items-center gap-3 px-5 py-3">
-              <span className="h-8 w-8 rounded-md ring-1 ring-white/20" style={{ background: col.hex }} />
+              <span className="h-8 w-8 rounded-md ring-1 ring-ink/15" style={{ background: col.hex }} />
               <span className="font-medium">{col.name}</span>
               <code className="text-xs text-mute">{col.hex}</code>
               {isAdmin && (
-                <button className="btn-ghost btn-sm ml-auto text-red-300" disabled={pending} onClick={() => confirm(`Remove ${col.name}?`) && run(() => deleteColor(col.id))}>
+                <button className="btn-ghost btn-sm ml-auto text-red-700" disabled={pending} onClick={() => confirm(`Remove ${col.name}?`) && run(() => deleteColor(col.id))}>
                   Remove
                 </button>
               )}
@@ -112,7 +112,7 @@ export function VisualTab({
               <div>
                 <p className="font-medium">{l.name}</p>
                 <p className="text-xs text-mute">
-                  Version {l.version} · {l.is_current ? <span className="text-emerald-300">current</span> : <span className="text-amber-300">retired</span>}
+                  Version {l.version} · {l.is_current ? <span className="text-emerald-800">current</span> : <span className="text-amber-800">retired</span>}
                 </p>
               </div>
               {isAdmin && (
@@ -120,7 +120,7 @@ export function VisualTab({
                   <button className="btn-ghost btn-sm" disabled={pending} onClick={() => run(() => setLogoCurrent(l.id, !l.is_current))}>
                     Mark {l.is_current ? "retired" : "current"}
                   </button>
-                  <button className="btn-ghost btn-sm ml-auto text-red-300" disabled={pending} onClick={() => confirm(`Delete ${l.name} (${l.version})?`) && run(() => deleteLogo(l.id))}>
+                  <button className="btn-ghost btn-sm ml-auto text-red-700" disabled={pending} onClick={() => confirm(`Delete ${l.name} (${l.version})?`) && run(() => deleteLogo(l.id))}>
                     Delete
                   </button>
                 </div>
@@ -158,7 +158,7 @@ function LogoUpload() {
         <input type="checkbox" name="is_current" defaultChecked /> Current
       </label>
       <button className="btn-primary" disabled={pending}>{pending ? "Uploading…" : "Upload"}</button>
-      {state?.error && <p role="alert" className="text-sm text-red-300 sm:col-span-5">{state.error}</p>}
+      {state?.error && <p role="alert" className="text-sm text-red-700 sm:col-span-5">{state.error}</p>}
     </form>
   );
 }
@@ -183,7 +183,7 @@ export function ConfidentialTab({ entries, isAdmin, run, pending }: { entries: C
             <span className="text-xs text-mute">{KIND_LABEL[e.kind]}</span>
             {e.note && <span className="text-xs text-dim">· {e.note}</span>}
             {isAdmin && (
-              <button className="btn-ghost btn-sm ml-auto text-red-300" disabled={pending} onClick={() => confirm(`Remove “${e.term}”?`) && run(() => deleteConfidential(e.id))}>
+              <button className="btn-ghost btn-sm ml-auto text-red-700" disabled={pending} onClick={() => confirm(`Remove “${e.term}”?`) && run(() => deleteConfidential(e.id))}>
                 Remove
               </button>
             )}

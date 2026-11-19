@@ -35,8 +35,8 @@ export function LoginForm() {
         />
         {signup && <p className="mt-1 text-xs text-dim">At least 8 characters. You join the Lumio demo workspace as a creator.</p>}
       </div>
-      {state?.error && <p role="alert" className="text-sm text-red-300">{state.error}</p>}
-      <button className="btn-primary" disabled={pending}>
+      {state?.error && <p role="alert" className="rounded-xl border border-proof/30 bg-proof/10 px-3 py-2 text-sm text-red-800">{state.error}</p>}
+      <button className="btn-primary py-2.5" disabled={pending}>
         {pending ? (signup ? "Creating account…" : "Signing in…") : signup ? "Create account" : "Sign in"}
       </button>
       <button type="button" className="btn-ghost btn-sm justify-self-center" onClick={() => setMode(signup ? "signin" : "signup")}>

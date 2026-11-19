@@ -18,7 +18,7 @@ export function RoleSwitcher({ current }: { current: Role }) {
     <label className="flex items-center gap-2 text-sm">
       <span className="hidden text-mute sm:inline">Viewing as</span>
       <select
-        className="rounded-lg border border-line-strong bg-surface py-1 pl-2 pr-7 text-sm font-medium"
+        className="rounded-full border-2 border-ink/80 bg-transparent py-1 pl-3 pr-7 text-sm font-semibold"
         value={current}
         disabled={pending}
         onChange={(e) => start(() => switchDemoRole(e.target.value as Role, path))}

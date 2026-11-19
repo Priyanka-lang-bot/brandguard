@@ -5,9 +5,9 @@ export { cx };
 
 const STATUS: Record<DraftStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-line text-soft ring-line" },
-  in_review: { label: "In review", cls: "bg-violet-500/10 text-violet-300 ring-violet-500/30" },
-  changes_requested: { label: "Changes requested", cls: "bg-amber-500/10 text-amber-300 ring-amber-500/30" },
-  approved: { label: "Approved", cls: "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" },
+  in_review: { label: "In review", cls: "bg-marker/50 text-ink ring-[#c9a800]/40" },
+  changes_requested: { label: "Changes requested", cls: "bg-amber-500/10 text-amber-800 ring-amber-500/30" },
+  approved: { label: "Approved", cls: "bg-emerald-500/10 text-emerald-800 ring-emerald-500/30" },
 };
 
 export function StatusPill({ status }: { status: DraftStatus }) {
@@ -16,9 +16,9 @@ export function StatusPill({ status }: { status: DraftStatus }) {
 }
 
 const SEV: Record<Severity, string> = {
-  high: "bg-red-500/10 text-red-300 ring-red-500/30",
-  medium: "bg-amber-500/10 text-amber-300 ring-amber-500/30",
-  low: "bg-sky-500/10 text-sky-300 ring-sky-500/30",
+  high: "bg-red-500/10 text-red-700 ring-red-500/30",
+  medium: "bg-amber-500/10 text-amber-800 ring-amber-500/30",
+  low: "bg-sky-500/10 text-sky-800 ring-sky-500/30",
 };
 export function SeverityBadge({ severity }: { severity: Severity }) {
   return (
@@ -43,9 +43,9 @@ export function CategoryBadge({ category }: { category: Category }) {
 
 const FSTATUS: Record<FindingStatus, { label: string; cls: string }> = {
   open: { label: "Open", cls: "text-mute bg-line" },
-  accepted: { label: "Fix accepted", cls: "text-emerald-300 bg-emerald-500/10" },
-  edited: { label: "Edited fix", cls: "text-emerald-300 bg-emerald-500/10" },
-  disputed: { label: "Disputed", cls: "text-orange-300 bg-orange-500/10" },
+  accepted: { label: "Fix accepted", cls: "text-emerald-800 bg-emerald-500/10" },
+  edited: { label: "Edited fix", cls: "text-emerald-800 bg-emerald-500/10" },
+  disputed: { label: "Disputed", cls: "text-orange-700 bg-orange-500/10" },
 };
 export function FindingStatusTag({ status }: { status: FindingStatus }) {
   const s = FSTATUS[status];
@@ -55,7 +55,7 @@ export function FindingStatusTag({ status }: { status: FindingStatus }) {
 export const ROLE_LABEL: Record<Role, string> = { admin: "Admin", reviewer: "Reviewer", creator: "Creator" };
 
 export function RoleBadge({ role }: { role: Role }) {
-  const cls = role === "admin" ? "bg-slate-600 text-white" : role === "reviewer" ? "bg-violet-600 text-white" : "bg-brand-600 text-white";
+  const cls = role === "admin" ? "bg-ink text-paper" : role === "reviewer" ? "bg-marker text-ink" : "bg-paper-2 text-ink ring-1 ring-ink/15";
   return <span className={cx("rounded-full px-2 py-0.5 text-[11px] font-semibold", cls)}>{ROLE_LABEL[role]}</span>;
 }
 
@@ -72,9 +72,9 @@ export function timeAgo(iso: string) {
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <span className={cx("inline-flex items-center gap-2 font-semibold tracking-tight", className)}>
+    <span className={cx("inline-flex items-center gap-2 font-display font-bold tracking-tight [font-stretch:110%]", className)}>
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor" className="text-brand-300" />
+        <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor" className="text-ink" />
         <path d="m8.5 12 2.4 2.4 4.6-4.8" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       BrandGuard

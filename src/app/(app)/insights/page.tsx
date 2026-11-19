@@ -38,8 +38,8 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
   if (!(await hasFinalRoundSchema(supabase))) {
     return (
       <div className="grid gap-4">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Brand insights</h1>
-        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+        <h1 className="page-title">Brand insights</h1>
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
           Insights need the database update in <code>supabase/migrations/0002_final_round.sql</code>, which adds the views this page reads.
           Run it once in the Supabase SQL editor.
         </p>
@@ -77,7 +77,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-mute">Admin</p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Brand insights</h1>
+          <h1 className="page-title">Brand insights</h1>
           <p className="mt-1 max-w-3xl text-sm text-mute">
             Computed live from this workspace&apos;s findings, disputes and approvals through row-level-secured database views. An issue is one
             Brand Kit source flagging the same words in one draft (re-checks are not double-counted). Every number links to the drafts behind
@@ -118,7 +118,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
         )}
         {demoCount > 0 && (
           <p className="basis-full text-xs text-mute">
-            <span className="mr-1 rounded bg-sky-500/15 px-1.5 py-0.5 font-semibold text-sky-300">Demo data</span>
+            <span className="mr-1 rounded bg-sky-500/15 px-1.5 py-0.5 font-semibold text-sky-800">Demo data</span>
             {demoCount} draft{demoCount === 1 ? " was" : "s were"} created by the demo seed (<code>demo_seed = true</code>) so this dashboard has
             history to show. Their findings come from real rule checks. The creators&apos; decisions and timestamps are scripted. Choose
             &ldquo;Exclude&rdquo; to see live data only.
@@ -143,7 +143,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
               {stats.slice(0, 10).map((s, i) => (
                 <li key={s.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-sm">
                   <Link href={q({ source: s.key })} className="truncate font-medium hover:text-brand-300 hover:underline">
-                    {i === 0 && <span className="mr-1.5 rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-300">Top</span>}
+                    {i === 0 && <span className="mr-1.5 rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">Top</span>}
                     {s.label}
                   </Link>
                   <span className="text-xs tabular-nums text-mute">
@@ -172,7 +172,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
                 return (
                   <li key={key} className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black">Possibly unclear</span>
+                      <span className="rounded-full bg-marker px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink">Possibly unclear</span>
                       <span className="font-medium">{s.source_label}</span>
                     </div>
                     <p className="mt-1 text-sm text-mute">
@@ -205,10 +205,10 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
                   <tr key={s.key}>
                     <td className="py-2">
                       <Link href={q({ source: s.key, status: "disputed" })} className="hover:text-brand-300 hover:underline">{s.label}</Link>
-                      {s.possiblyUnclear && <span className="ml-2 rounded bg-amber-400/20 px-1 text-[10px] font-semibold text-amber-300">unclear?</span>}
+                      {s.possiblyUnclear && <span className="ml-2 rounded bg-amber-400/20 px-1 text-[10px] font-semibold text-amber-800">unclear?</span>}
                     </td>
                     <td className="py-2 text-right tabular-nums">{s.disputed}/{s.issues}</td>
-                    <td className={`py-2 text-right font-medium tabular-nums ${s.possiblyUnclear ? "text-amber-300" : ""}`}>{pct(s.disputeRate)}</td>
+                    <td className={`py-2 text-right font-medium tabular-nums ${s.possiblyUnclear ? "text-amber-800" : ""}`}>{pct(s.disputeRate)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -223,7 +223,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
             <ul className="divide-y divide-line text-sm">
               {terms.map((t) => (
                 <li key={`${t.term_id}${t.variant}`} className="flex items-center gap-3 py-2">
-                  <Link href={q({ source: t.term_id ?? "", quote: t.variant.toLowerCase() })} className="font-medium text-red-300 line-through decoration-red-400/60 hover:underline">{t.variant}</Link>
+                  <Link href={q({ source: t.term_id ?? "", quote: t.variant.toLowerCase() })} className="font-medium text-red-700 line-through decoration-red-400/60 hover:underline">{t.variant}</Link>
                   <span className="text-xs text-mute">{t.label.replace(/^TERM-\d+ · /, "→ ")}</span>
                   <span className="ml-auto text-xs tabular-nums text-mute">{t.count}× in {t.drafts} draft{t.drafts === 1 ? "" : "s"}</span>
                 </li>
@@ -239,7 +239,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
             {weeks.map((w) => (
               <Link key={w.week} href={q({ week: w.week })} className="group flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${w.issues} issues in ${w.draftsWithIssues} drafts, week of ${w.week}`}>
                 <span className="text-[10px] tabular-nums text-mute">{w.issues || ""}</span>
-                <span className="w-full rounded-t bg-brand-500/80 group-hover:bg-brand-400" style={{ height: `${(w.issues / maxWeek) * 100}%`, minHeight: w.issues ? 3 : 0 }} />
+                <span className="w-full rounded-t bg-ink group-hover:bg-proof" style={{ height: `${(w.issues / maxWeek) * 100}%`, minHeight: w.issues ? 3 : 0 }} />
                 <span className="text-[10px] text-dim">{w.week.slice(5)}</span>
               </Link>
             ))}
@@ -255,7 +255,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
                 <li key={c.channel} className="grid grid-cols-[110px_1fr_auto] items-center gap-3">
                   <Link href={q({ channel: c.channel })} className="truncate hover:text-brand-300 hover:underline">{c.channel}</Link>
                   <span className="h-2 rounded-full bg-line">
-                    <span className="block h-2 rounded-full bg-violet-500" style={{ width: `${(c.perDraft / maxChannel) * 100}%` }} />
+                    <span className="block h-2 rounded-full bg-proof" style={{ width: `${(c.perDraft / maxChannel) * 100}%` }} />
                   </span>
                   <span className="text-xs tabular-nums text-mute">{c.perDraft.toFixed(1)} · {c.drafts} drafts</span>
                 </li>
@@ -309,7 +309,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
 function Kpi({ label, value, sub, href, warn }: { label: string; value: string; sub?: string; href: string; warn?: boolean }) {
   return (
     <Link href={href} className={`card px-4 py-3 transition hover:border-line-strong ${warn ? "border-amber-500/40" : ""}`}>
-      <div className={`text-2xl font-semibold tabular-nums ${warn ? "text-amber-300" : ""}`}>{value}</div>
+      <div className={`text-2xl font-semibold tabular-nums ${warn ? "text-amber-800" : ""}`}>{value}</div>
       <div className="text-xs text-mute">{label}</div>
       {sub && <div className="mt-0.5 text-[11px] text-dim">{sub}</div>}
     </Link>

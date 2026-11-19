@@ -9,8 +9,13 @@ import { NAV_ITEMS } from "./nav-items";
 export function SiteNav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? Math.min(1, window.scrollY / max) : 0);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -28,6 +33,8 @@ export function SiteNav({ signedIn }: { signedIn: boolean }) {
         scrolled || open ? "bg-paper/90 shadow-[0_1px_0_rgb(14_15_20/0.1)] backdrop-blur-md" : "bg-transparent"
       }`}
     >
+      {/* Reading progress */}
+      <span aria-hidden className="absolute inset-x-0 bottom-0 h-[2px] origin-left bg-proof" style={{ transform: `scaleX(${progress})` }} />
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:rounded focus:bg-ink focus:px-3 focus:py-2 focus:text-paper">
         Skip to content
       </a>

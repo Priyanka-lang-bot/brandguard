@@ -80,7 +80,7 @@ export function DraftWorkspace(p: Props) {
       <StatusBanner {...p} counts={counts} current={current} />
 
       {error && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-700">
           {error}
         </p>
       )}
@@ -128,7 +128,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
   let tone = "border-line bg-surface";
   let text: React.ReactNode = null;
   if (draft.status === "approved") {
-    tone = "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
+    tone = "border-emerald-500/30 bg-emerald-500/10 text-emerald-800";
     text = (
       <>
         <strong>Approved</strong> by {p.lastDecision?.actor || "a reviewer"}. Version {draft.current_version} is cleared to publish.
@@ -136,7 +136,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (draft.status === "in_review") {
-    tone = "border-violet-500/30 bg-violet-500/10 text-violet-200";
+    tone = "border-violet-500/30 bg-violet-500/10 text-violet-700";
     text = p.canReview ? (
       <>
         <strong>Waiting for your decision.</strong> Review the findings and how the author resolved them
@@ -153,7 +153,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (draft.status === "changes_requested") {
-    tone = "border-amber-500/30 bg-amber-500/10 text-amber-200";
+    tone = "border-amber-500/30 bg-amber-500/10 text-amber-800";
     text = (
       <>
         <strong>{p.lastDecision?.actor || "The reviewer"} asked for changes:</strong> “{p.lastDecision?.detail}”
@@ -161,7 +161,7 @@ function StatusBanner(p: Props & { counts: { open: number; fixed: number; disput
       </>
     );
   } else if (p.canEdit) {
-    tone = counts.open ? "border-amber-500/30 bg-amber-500/10 text-amber-200" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
+    tone = counts.open ? "border-amber-500/30 bg-amber-500/10 text-amber-800" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-800";
     text = counts.open ? (
       <>
         <strong>{counts.open} finding{counts.open === 1 ? "" : "s"} to resolve.</strong> Accept the suggested fix, edit it, or dispute it
@@ -300,7 +300,7 @@ function FindingsTab(
             <DiffView from={base} to={applied.text} />
           ) : needsEdit ? (
             <>
-              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
                 Showing the version the reviewer saw (v{current.version_no}). Click “Edit text” to change it — the new version is checked again.
               </p>
               <div className="whitespace-pre-wrap leading-relaxed text-soft">{current.content}</div>
@@ -535,7 +535,7 @@ function FindingCard({
         </a>
       )}
       <p className="mt-2 text-sm">
-        <span className={cx("rounded px-1", f.image_id && f.start_idx === f.end_idx ? "bg-red-500/10 text-red-300" : "bg-red-500/10 text-red-300 line-through decoration-red-300")}>{f.quote}</span>
+        <span className={cx("rounded px-1", f.image_id && f.start_idx === f.end_idx ? "bg-red-500/10 text-red-700" : "bg-red-500/10 text-red-700 line-through decoration-red-500")}>{f.quote}</span>
       </p>
       <p className="mt-2 text-sm text-soft">{f.explanation}</p>
 
@@ -557,8 +557,8 @@ function FindingCard({
 
       {f.status === "open" && f.suggestion && (
         <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">Suggested fix</span>
-          <p className="text-emerald-200">{f.suggestion || <em>(remove)</em>}</p>
+          <span className="text-xs font-medium uppercase tracking-wide text-emerald-800">Suggested fix</span>
+          <p className="text-emerald-800">{f.suggestion || <em>(remove)</em>}</p>
         </div>
       )}
       {f.status === "open" && !f.suggestion && (
@@ -566,12 +566,12 @@ function FindingCard({
       )}
       {(f.status === "accepted" || f.status === "edited") && (
         <p className="mt-3 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">{f.image_id ? (f.start_idx === f.end_idx ? "Agreed fix" : "Agreed fix for the image text") : "Replaced with"}</span>
-          <span className="block rounded bg-emerald-500/10 px-1 text-emerald-200">{f.resolution_text || <em>(removed)</em>}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-emerald-800">{f.image_id ? (f.start_idx === f.end_idx ? "Agreed fix" : "Agreed fix for the image text") : "Replaced with"}</span>
+          <span className="block rounded bg-emerald-500/10 px-1 text-emerald-800">{f.resolution_text || <em>(removed)</em>}</span>
         </p>
       )}
       {f.status === "disputed" && (
-        <p className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm text-orange-200">
+        <p className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm text-orange-700">
           <span className="text-xs font-medium uppercase tracking-wide">Author disagrees</span>
           <span className="block">{f.dispute_reason}</span>
         </p>
@@ -685,7 +685,7 @@ function ReviewPanel({
         <li>
           {counts.fixed} fix{counts.fixed === 1 ? "" : "es"} applied by the author
         </li>
-        <li className={counts.disputed ? "font-medium text-orange-300" : ""}>
+        <li className={counts.disputed ? "font-medium text-orange-700" : ""}>
           {counts.disputed} disputed finding{counts.disputed === 1 ? "" : "s"} — your call
         </li>
       </ul>
@@ -717,11 +717,11 @@ function DiffView({ from, to }: { from: string; to: string }) {
     <div className="whitespace-pre-wrap leading-[1.9] text-soft">
       {parts.map((part, i) =>
         part.added ? (
-          <ins key={i} className="rounded-sm bg-emerald-500/20 px-0.5 text-emerald-200 no-underline">
+          <ins key={i} className="rounded-sm bg-emerald-500/20 px-0.5 text-emerald-800 no-underline">
             {part.value}
           </ins>
         ) : part.removed ? (
-          <del key={i} className="rounded-sm bg-red-500/20 px-0.5 text-red-300">
+          <del key={i} className="rounded-sm bg-red-500/20 px-0.5 text-red-700">
             {part.value}
           </del>
         ) : (

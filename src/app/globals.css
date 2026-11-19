@@ -9,15 +9,16 @@
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --color-bg: #07090f;
-  --color-surface: #0f131c;
-  --color-surface-2: #151a26;
-  --color-line: #1e2535;
-  --color-line-strong: #2b3449;
-  --color-fg: #eef1f8;
-  --color-soft: #c4ccdf;
-  --color-mute: #98a2ba;
-  --color-dim: #68738d;
+  /* App surfaces: the landing page's paper & ink palette is the single source of truth. */
+  --color-bg: #f3efe6;
+  --color-surface: #fffdf8;
+  --color-surface-2: #f7f3eb;
+  --color-line: #e3dccd;
+  --color-line-strong: #cdc4b1;
+  --color-fg: #0e0f14;
+  --color-soft: #2c2d35;
+  --color-mute: #595a64;
+  --color-dim: #7a7b84;
 
   /* Editorial (landing) palette */
   --color-paper: #f3efe6;
@@ -28,52 +29,53 @@
   --color-proof: #e5432b;
   --color-approve: #1f8f5f;
 
-  --color-brand-100: #dfe3ff;
-  --color-brand-200: #c4caff;
-  --color-brand-300: #aab3ff;
-  --color-brand-400: #8c98ff;
-  --color-brand-500: #6c7cff;
-  --color-brand-600: #5568f2;
-  --color-brand-700: #4355d6;
+  /* "brand" accents mapped onto the editorial palette (kept as names so existing classes keep working):
+     100–200 marker yellow, 300–400 proof red (links, emphasis), 500–700 ink (primary actions, bars, focus). */
+  --color-brand-100: #fff6c2;
+  --color-brand-200: #ffe14d;
+  --color-brand-300: #b3321d;
+  --color-brand-400: #e5432b;
+  --color-brand-500: #0e0f14;
+  --color-brand-600: #0e0f14;
+  --color-brand-700: #3b3c45;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--color-bg);
 }
 
 body {
   @apply text-fg antialiased;
   min-height: 100vh;
-  background:
-    radial-gradient(900px 480px at 8% -8%, rgb(108 124 255 / 0.16), transparent 60%),
-    radial-gradient(720px 420px at 100% 0%, rgb(168 85 247 / 0.10), transparent 60%),
-    var(--color-bg);
-  background-attachment: fixed;
+  background: var(--color-bg);
+  font-family: var(--font-display);
+  font-stretch: 100%;
 }
 
-::selection { background: rgb(108 124 255 / 0.35); }
+::selection { background: var(--color-marker); color: var(--color-ink); }
 
-/* Slim dark scrollbars */
 * { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 
-@utility btn { @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
-@utility btn-primary { @apply btn bg-brand-600 text-white shadow-[0_0_0_1px_rgb(255_255_255/0.08)_inset,0_6px_18px_-6px_rgb(85_104_242/0.7)] hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400; }
-@utility btn-secondary { @apply btn border border-line-strong bg-surface-2 text-fg hover:border-slate-500 hover:bg-line; }
-@utility btn-ghost { @apply btn text-mute hover:bg-line hover:text-fg; }
-@utility btn-danger { @apply btn border border-red-500/30 bg-transparent text-red-300 hover:bg-red-500/10; }
-@utility btn-success { @apply btn bg-emerald-600 text-white shadow-[0_6px_18px_-8px_rgb(16_185_129/0.7)] hover:bg-emerald-500; }
-@utility btn-sm { @apply px-2.5 py-1 text-xs; }
-@utility input { @apply w-full rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm text-fg placeholder:text-dim focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30; }
-@utility label { @apply mb-1 block text-sm font-medium text-soft; }
-@utility card { @apply rounded-xl border border-line bg-surface/80 shadow-[0_1px_0_0_rgb(255_255_255/0.03)_inset,0_12px_32px_-18px_rgb(0_0_0/0.8)] backdrop-blur-sm; }
+@utility btn { @apply inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-45; }
+@utility btn-primary { @apply btn bg-ink text-paper hover:-translate-y-px hover:bg-ink-soft disabled:translate-y-0; }
+@utility btn-secondary { @apply btn border-2 border-ink/80 bg-transparent text-ink hover:bg-ink hover:text-paper; }
+@utility btn-ghost { @apply btn text-ink-soft hover:bg-ink/6 hover:text-ink; }
+@utility btn-danger { @apply btn border-2 border-proof/50 bg-transparent text-red-700 hover:bg-proof/10; }
+@utility btn-success { @apply btn bg-approve text-white hover:-translate-y-px hover:brightness-110 disabled:translate-y-0; }
+@utility btn-sm { @apply px-3 py-1 text-xs; }
+@utility input { @apply w-full rounded-xl border border-line-strong bg-white px-3.5 py-2.5 text-sm text-fg placeholder:text-dim transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-marker/60; }
+@utility label { @apply mb-1.5 block text-sm font-semibold text-soft; }
+@utility card { @apply rounded-2xl border border-line bg-surface shadow-[0_1px_0_rgb(0_0_0/0.03),0_18px_40px_-30px_rgb(14_15_20/0.45)]; }
 
-select option { background: var(--color-surface-2); color: var(--color-fg); }
+select option { background: #fff; color: var(--color-fg); }
 input[type="file"] { color: var(--color-mute); }
 input[type="file"]::file-selector-button {
-  margin-right: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--color-line-strong);
-  background: var(--color-surface-2); color: var(--color-fg); padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer;
+  margin-right: 0.75rem; border-radius: 999px; border: 2px solid var(--color-ink);
+  background: transparent; color: var(--color-ink); padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
 }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-ink); }
 code { font-family: var(--font-mono); }
 
 /* ---------------------------------------------------------------------------
@@ -135,3 +137,15 @@ html:has(.landing) { scroll-behavior: smooth; scroll-padding-top: 84px; }
   html:has(.landing) { scroll-behavior: auto; }
 }
 @keyframes scan { 0% { transform: translateY(-40px); } 100% { transform: translateY(260px); } }
+
+/* App page titles: the landing page's display face, sized for working screens. */
+@utility page-title { font-family: var(--font-display); font-weight: 850; font-stretch: 112%; letter-spacing: -0.035em; line-height: 0.98; font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
+
+/* Scroll-driven product demo: crossfade between steps. */
+@keyframes demo-step-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.demo-step-in { animation: demo-step-in 420ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes demo-stamp { 0% { transform: scale(1.7) rotate(-14deg); opacity: 0; } 65% { transform: scale(0.95) rotate(-9deg); opacity: 1; } 100% { transform: scale(1) rotate(-9deg); opacity: 1; } }
+.demo-stamp { animation: demo-stamp 520ms cubic-bezier(.2,.8,.3,1.2) 180ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .demo-step-in, .demo-stamp { animation: none !important; }
+}

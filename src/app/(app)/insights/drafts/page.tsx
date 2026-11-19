@@ -50,7 +50,7 @@ export default async function InsightDrafts({ searchParams }: { searchParams: Pr
     <div className="grid gap-6">
       <div>
         <Link href="/insights" className="text-sm text-mute hover:text-fg">← Insights</Link>
-        <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">Underlying drafts</h1>
+        <h1 className="mt-2 page-title">Underlying drafts</h1>
         <p className="mt-1 text-sm text-mute">{parts.length ? parts.join(" · ") : "All drafts"}</p>
         <p className="mt-1 text-sm">
           <strong className="tabular-nums">{shown.length}</strong> draft{shown.length === 1 ? "" : "s"}
@@ -71,7 +71,7 @@ export default async function InsightDrafts({ searchParams }: { searchParams: Pr
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/drafts/${d.id}`} className="font-medium hover:text-brand-300 hover:underline">{d.title}</Link>
                   <StatusPill status={d.status as DraftStatus} />
-                  {d.demo_seed && <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-sky-300">demo history</span>}
+                  {d.demo_seed && <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800">demo history</span>}
                   <span className="ml-auto text-xs text-mute">
                     {d.channel} · {data.names[d.author_id] ?? "Unknown"} · {new Date(d.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                     {d.hours_to_approval !== null && ` · approved in ${d.hours_to_approval.toFixed(1)} h`}
@@ -84,7 +84,7 @@ export default async function InsightDrafts({ searchParams }: { searchParams: Pr
                         <FindingStatusTag status={r.status as FindingStatus} />
                         <code className="text-xs text-mute">{r.source_label.split(" · ")[0]}</code>
                         <span className="text-soft">“{r.quote}”</span>
-                        {r.dispute_reason && <span className="text-xs text-orange-300">— {r.dispute_reason}</span>}
+                        {r.dispute_reason && <span className="text-xs text-orange-700">— {r.dispute_reason}</span>}
                       </li>
                     ))}
                   </ul>

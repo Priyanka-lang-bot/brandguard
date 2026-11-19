@@ -104,7 +104,7 @@ export function KitEditor({
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-700">
           {error}
         </p>
       )}
@@ -130,10 +130,10 @@ type RunFn = (fn: () => Promise<Result>, after?: () => void) => void;
 function PendingRules({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: boolean; run: RunFn; pending: boolean }) {
   return (
     <section className="card border-amber-500/30 bg-amber-500/5 p-5">
-      <h2 className="font-semibold text-amber-200">
+      <h2 className="font-semibold text-amber-800">
         {rules.length} rule{rules.length === 1 ? "" : "s"} waiting for approval
       </h2>
-      <p className="text-sm text-amber-200/80">
+      <p className="text-sm text-amber-800">
         Extracted from an imported guideline document. They are not used in checks until an admin approves them.
       </p>
       <div className="mt-4 grid gap-3">
@@ -150,7 +150,7 @@ function PendingRules({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin
             {r.source_excerpt ? (
               <blockquote className="mt-2 border-l-2 border-amber-500/40 pl-3 text-xs italic text-mute">“{r.source_excerpt}”</blockquote>
             ) : (
-              <p className="mt-2 text-xs text-amber-300">No exact source sentence was found in the document — check this one carefully.</p>
+              <p className="mt-2 text-xs text-amber-800">No exact source sentence was found in the document — check this one carefully.</p>
             )}
             {isAdmin && (
               <div className="mt-3 flex gap-2">
@@ -199,7 +199,7 @@ function RulesTab({ rules, isAdmin, run, pending, editRuleId }: { rules: Rule[];
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-mute">{CATEGORY_LABEL[cat]}</h2>
             <div className="card divide-y divide-line">
               {list.map((r) => (
-                <div key={r.id} id={`rule-${r.id}`} className={`flex flex-wrap items-start gap-3 px-5 py-3 ${editRuleId === r.id ? "bg-brand-500/10" : ""}`}>
+                <div key={r.id} id={`rule-${r.id}`} className={`flex flex-wrap items-start gap-3 px-5 py-3 ${editRuleId === r.id ? "bg-marker/30" : ""}`}>
                   <code className="mt-0.5 w-14 shrink-0 text-xs font-semibold text-mute sm:w-16">{r.code}</code>
                   <div className="min-w-0 basis-40 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -222,7 +222,7 @@ function RulesTab({ rules, isAdmin, run, pending, editRuleId }: { rules: Rule[];
                         Edit
                       </button>
                       <button
-                        className="btn-ghost btn-sm text-red-300"
+                        className="btn-ghost btn-sm text-red-700"
                         disabled={pending}
                         onClick={() => confirm(`Delete ${r.code}?`) && run(() => deleteRule(r.id))}
                       >
@@ -366,11 +366,11 @@ function TermsTab({ terms, isAdmin, run, pending }: { terms: Term[]; isAdmin: bo
                 <td className="px-4 py-3">
                   <code className="text-xs font-semibold text-mute">TERM-{i + 1}</code>
                 </td>
-                <td className="px-4 py-3 font-medium text-emerald-300">{t.preferred}</td>
+                <td className="px-4 py-3 font-medium text-emerald-800">{t.preferred}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {t.banned.map((b) => (
-                      <span key={b} className="rounded bg-red-500/10 px-1.5 py-0.5 text-xs text-red-300 line-through">
+                      <span key={b} className="rounded bg-red-500/10 px-1.5 py-0.5 text-xs text-red-700 line-through">
                         {b}
                       </span>
                     ))}
@@ -382,7 +382,7 @@ function TermsTab({ terms, isAdmin, run, pending }: { terms: Term[]; isAdmin: bo
                     <button className="btn-ghost btn-sm" onClick={() => open(t)}>
                       Edit
                     </button>
-                    <button className="btn-ghost btn-sm text-red-300" disabled={pending} onClick={() => confirm(`Delete "${t.preferred}"?`) && run(() => deleteTerm(t.id))}>
+                    <button className="btn-ghost btn-sm text-red-700" disabled={pending} onClick={() => confirm(`Delete "${t.preferred}"?`) && run(() => deleteTerm(t.id))}>
                       Delete
                     </button>
                   </td>
@@ -455,7 +455,7 @@ function FactsTab({ facts, isAdmin, run, pending, today }: { facts: Fact[]; isAd
                   <span className="font-medium">{f.topic}</span>
                   {f.valid_until &&
                     (expired ? (
-                      <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-red-300 ring-1 ring-red-500/30">
+                      <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-500/30">
                         Expired {f.valid_until}
                       </span>
                     ) : (
@@ -469,7 +469,7 @@ function FactsTab({ facts, isAdmin, run, pending, today }: { facts: Fact[]; isAd
                   <button className="btn-ghost btn-sm" onClick={() => open(f)}>
                     Edit
                   </button>
-                  <button className="btn-ghost btn-sm text-red-300" disabled={pending} onClick={() => confirm(`Delete ${f.code}?`) && run(() => deleteFact(f.id))}>
+                  <button className="btn-ghost btn-sm text-red-700" disabled={pending} onClick={() => confirm(`Delete ${f.code}?`) && run(() => deleteFact(f.id))}>
                     Delete
                   </button>
                 </div>
@@ -493,15 +493,15 @@ function ImportTab({ aiReady, onDone }: { aiReady: boolean; onDone: () => void }
           live until you approve each rule.
         </p>
       </div>
-      {!aiReady && <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300">The AI key isn&apos;t configured on this server, so import is unavailable.</p>}
+      {!aiReady && <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-800">The AI key isn&apos;t configured on this server, so import is unavailable.</p>}
       <input name="file" type="file" accept=".pdf,.docx,.txt,.md" required className="text-sm" aria-label="Guideline document" />
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700">
           {state.error}
         </p>
       )}
       {state?.ok && (
-        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-800">
           {state.count} rules extracted and waiting for approval at the top of this page.{" "}
           <button type="button" className="underline" onClick={onDone}>
             Review them

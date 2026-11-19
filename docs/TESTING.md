@@ -12,6 +12,7 @@ All results below were produced on 2026-11-19 from the final-round commits. Noth
 | Migrations + RLS (Postgres 16) | `npm run test:sql` | **Passed** (both migrations apply in single transactions) |
 | Production build | `npm run build` | Passed (13 routes) |
 | End-to-end judge journey | `bash tests/e2e/run.sh` | **49 / 49 checks passed** |
+| Scroll-driven product demo | `BASE=… python3 tests/e2e/scroll_demo.py` | **37 / 37 checks passed** (3 desktop sizes; phone, tablet, short laptop; reduced motion) |
 | Accuracy (rules only) | `npm run eval` | Precision 100.0%, recall 70.3% |
 | Accuracy (rules + Gemini) | `GEMINI_API_KEY=… npm run eval` | **Not executed: no key available** |
 | Live deployment | — | **Not verified for the final-round code**: the new commits have not been pushed or deployed yet (see OWNER_ACTIONS.md) |

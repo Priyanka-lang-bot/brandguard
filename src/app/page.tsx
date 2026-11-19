@@ -208,14 +208,13 @@ function Product() {
           <div>
             <h2 className="reveal display-wide text-[clamp(2.6rem,7vw,7rem)]">Draft to approved.</h2>
             <p className="reveal reveal-d1 mt-4 max-w-2xl text-lg text-ink-soft">
-              Six steps, one screen. Step through a scripted example below. To see real findings, sign in with a demo account and check a draft
+              Six steps, one screen. Keep scrolling to watch a scripted example move through them, or pick a step. To see real findings, sign in with a demo account and check a draft
               yourself.
             </p>
           </div>
         </div>
-        <div className="reveal reveal-d2">
-          <WorkflowDemo />
-        </div>
+        {/* Not wrapped in .reveal: the demo uses position: sticky and must not sit inside a transformed box. */}
+        <WorkflowDemo />
       </div>
     </Reveal>
   );
@@ -552,7 +551,7 @@ function Footer() {
       <div className="mx-auto max-w-[1400px] px-5 sm:px-8">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Logo className="font-display text-xl [font-stretch:110%]" />
+            <Logo className="text-xl text-paper [&_svg_path:first-child]:text-marker [&_svg_path:last-child]:stroke-ink" />
             <p className="mt-4 max-w-xs text-sm text-paper/60">Pre-publication brand checks with cited findings, suggested fixes and human approval.</p>
           </div>
           <FooterCol title="Navigate" links={NAV_ITEMS.map((n) => [n.label, n.href])} />

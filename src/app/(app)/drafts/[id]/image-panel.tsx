@@ -130,7 +130,7 @@ function ImagePanel({
         <div className="grid content-start gap-4 text-sm">
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-mute">Alt text</h3>
-            <p className={cx("mt-1", img.alt_text ? "text-soft" : "italic text-amber-300")}>{img.alt_text || "None provided"}</p>
+            <p className={cx("mt-1", img.alt_text ? "text-soft" : "italic text-amber-800")}>{img.alt_text || "None provided"}</p>
           </div>
 
           {a && (
@@ -143,11 +143,11 @@ function ImagePanel({
                   const off = palette.length > 0 && counted && near !== null && near.deltaE > OFF_PALETTE_DELTA_E;
                   return (
                     <li key={c.hex} className="flex items-center gap-2">
-                      <span className="h-5 w-5 shrink-0 rounded ring-1 ring-white/20" style={{ background: c.hex }} />
+                      <span className="h-5 w-5 shrink-0 rounded ring-1 ring-ink/15" style={{ background: c.hex }} />
                       <code className="text-xs">{c.hex}</code>
                       <span className="text-xs text-dim">{Math.round(c.share * 100)}%</span>
                       {palette.length > 0 && near && (
-                        <span className={cx("ml-auto text-xs", off ? "font-medium text-red-300" : "text-dim")}>
+                        <span className={cx("ml-auto text-xs", off ? "font-medium text-red-700" : "text-dim")}>
                           {off ? `off-palette · nearest ${near.color.name}` : !counted ? (isNeutral(c.hex) ? "neutral" : "minor") : `≈ ${near.color.name}`}
                         </span>
                       )}
@@ -165,7 +165,7 @@ function ImagePanel({
               <ul className="mt-2 grid gap-1">
                 {a.contrast.map((c, i) => (
                   <li key={i} className="flex items-baseline gap-2 text-xs">
-                    <span className={cx("w-14 shrink-0 font-semibold tabular-nums", c.ratio < c.required ? "text-red-300" : "text-emerald-300")}>
+                    <span className={cx("w-14 shrink-0 font-semibold tabular-nums", c.ratio < c.required ? "text-red-700" : "text-emerald-800")}>
                       {c.ratio.toFixed(2)}:1
                     </span>
                     <span className="truncate text-soft">{c.text.replace(/\n/g, " ")}</span>
@@ -193,13 +193,13 @@ function ImagePanel({
           )}
 
           {a && a.textSource === "seed" && (
-            <p className="rounded-lg bg-sky-500/10 px-3 py-2 text-xs text-sky-200">
+            <p className="rounded-lg bg-sky-500/10 px-3 py-2 text-xs text-sky-800">
               Demo image: its text regions come from the poster&apos;s own design file, because demo data is seeded without the AI. Contrast was
               measured from the pixels. Upload your own image to see the AI vision check.
             </p>
           )}
           {a && !a.ai.ran && a.textSource !== "seed" && (
-            <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
               The vision check did not run ({a.ai.error ?? "not requested"}). Palette and alt text were checked. Text in the image, contrast and logo were not.
             </p>
           )}
@@ -212,7 +212,7 @@ function ImagePanel({
                   onClick={() => onPickFinding(f.id)}
                   className={cx(
                     "rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset",
-                    f.status === "open" ? "bg-red-500/10 text-red-300 ring-red-500/30" : f.status === "disputed" ? "bg-orange-500/10 text-orange-300 ring-orange-500/30" : "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30",
+                    f.status === "open" ? "bg-red-500/10 text-red-700 ring-red-500/30" : f.status === "disputed" ? "bg-orange-500/10 text-orange-700 ring-orange-500/30" : "bg-emerald-500/10 text-emerald-800 ring-emerald-500/30",
                   )}
                 >
                   {f.source_label.split(" · ")[0]}

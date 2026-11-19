@@ -33,8 +33,9 @@ async def main():
         ok("hero headline present", await page.get_by_role("heading", level=1).count() == 1)
         for label, anchor in [("Product", "#product"), ("Features", "#features"), ("How it works", "#workflow"), ("Security", "#security"), ("Insights", "#insights"), ("About", "#about")]:
             ok(f"nav '{label}' targets an existing section", await page.locator(anchor).count() == 1)
-        await page.get_by_role("tab", name=re.compile("Identify issues")).click()
-        ok("scripted demo steps through", await page.get_by_text("Every finding quotes the exact words").count() == 1)
+        await page.locator("[aria-controls=demo-panel]", has_text="Identify issues").click()
+        await page.wait_for_timeout(1600)
+        ok("scripted demo: clicking a step shows it", await page.get_by_text("Every finding quotes the exact words").count() == 1)
         await page.get_by_role("link", name="Get started").first.click()
         await page.wait_for_url("**/login")
         ok("Get started CTA goes to /login", page.url.endswith("/login"))

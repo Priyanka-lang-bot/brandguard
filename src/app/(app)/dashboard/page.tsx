@@ -36,7 +36,7 @@ export default async function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-mute">Lumio workspace</p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Welcome, {profile.full_name.split(" ")[0]}</h1>
+          <h1 className="page-title">Welcome, {profile.full_name.split(" ")[0]}</h1>
         </div>
         {profile.role !== "reviewer" && (
           <Link href="/drafts/new" className="btn-primary">
@@ -97,12 +97,12 @@ function GuideCard({ role, hasQueue }: { role: string; hasQueue: boolean }) {
             "Switch to Reviewer (top right) to approve it.",
           ];
   return (
-    <section className="card border-brand-500/20 bg-brand-500/10 p-5">
-      <h2 className="text-sm font-semibold text-brand-300">How to try BrandGuard as {role}</h2>
+    <section className="relative rounded-2xl border-2 border-ink bg-marker/25 p-5">
+      <h2 className="kicker text-ink">How to try BrandGuard as {role}</h2>
       <ol className="mt-3 grid gap-2 text-sm text-soft sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
           <li key={i} className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white">
+            <span className="font-serif text-xl italic leading-none text-proof">
               {i + 1}
             </span>
             <span>{s}</span>
@@ -133,7 +133,7 @@ function DraftTable({
       <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
         {title}
         {highlight && drafts.length > 0 && (
-          <span className="rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">{drafts.length}</span>
+          <span className="rounded-full bg-marker px-2 py-0.5 text-xs font-bold text-ink">{drafts.length}</span>
         )}
       </h2>
       {drafts.length === 0 ? (
@@ -168,7 +168,7 @@ function DraftTable({
                       <StatusPill status={d.status} />
                     </td>
                     <td className="hidden px-4 py-3 sm:table-cell">
-                      {open ? <span className="font-medium text-amber-300">{open}</span> : <span className="text-dim">—</span>}
+                      {open ? <span className="font-medium text-amber-800">{open}</span> : <span className="text-dim">—</span>}
                     </td>
                     <td className="hidden px-4 py-3 text-right text-mute md:table-cell">{timeAgo(d.updated_at)}</td>
                   </tr>

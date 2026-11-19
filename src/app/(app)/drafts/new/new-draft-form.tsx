@@ -143,14 +143,14 @@ export function NewDraftForm() {
           </div>
         ))}
         {totalMb > 4.2 && (
-          <p role="alert" className="text-xs text-amber-300">
+          <p role="alert" className="text-xs text-amber-800">
             These images add up to {totalMb.toFixed(1)} MB. Uploads are limited to about 4 MB per request, so attach fewer here and add the rest from the draft page.
           </p>
         )}
       </fieldset>
 
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700">
           {state.error}
         </p>
       )}
