@@ -1,0 +1,417 @@
+{
+ "mode": "rules",
+ "executed_at": "2026-11-19T03:57:07.801Z",
+ "model": null,
+ "posts": 59,
+ "expected": 64,
+ "actual": 45,
+ "tp": 45,
+ "fp": 0,
+ "fn": 19,
+ "precision": 1,
+ "recall": 0.703125,
+ "grounding": null,
+ "by_category": {
+  "accessibility": {
+   "tp": 5,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1,
+   "recall": 1
+  },
+  "claims": {
+   "tp": 12,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1,
+   "recall": 1
+  },
+  "facts_prices": {
+   "tp": 0,
+   "fp": 0,
+   "fn": 10,
+   "precision": null,
+   "recall": 0
+  },
+  "outdated_fact": {
+   "tp": 0,
+   "fp": 0,
+   "fn": 3,
+   "precision": null,
+   "recall": 0
+  },
+  "product_name": {
+   "tp": 9,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1,
+   "recall": 1
+  },
+  "terminology": {
+   "tp": 9,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1,
+   "recall": 1
+  },
+  "tone": {
+   "tp": 10,
+   "fp": 0,
+   "fn": 2,
+   "precision": 1,
+   "recall": 0.8333333333333334
+  },
+  "unreleased": {
+   "tp": 0,
+   "fp": 0,
+   "fn": 4,
+   "precision": null,
+   "recall": 0
+  }
+ },
+ "seconds": 0.022,
+ "details": [
+  {
+   "id": "P13",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹149 a month",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P14",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹1,499 a year",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P15",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-2",
+      "MSG-1"
+     ],
+     "quote": "5 study plans",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P16",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-2",
+      "MSG-1"
+     ],
+     "quote": "unlimited flashcards",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P17",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-3",
+      "MSG-1"
+     ],
+     "quote": "More than 2 lakh learners",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P18",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "Diwali offer: 40% off Lumio Plus, this week only",
+     "category": "outdated_fact"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P19",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-5",
+      "MSG-1",
+      "MSG-2"
+     ],
+     "quote": "Android and iPhone",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P20",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-5",
+      "MSG-1",
+      "MSG-2"
+     ],
+     "quote": "study offline",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P21",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹2,199 per year",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P22",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "grab the Diwali deal",
+     "category": "outdated_fact"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P23",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "Lumio Live, our 1:1 tutoring, launches next month",
+     "category": "unreleased"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P24",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "Book your first Lumio Live session",
+     "category": "unreleased"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P25",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-5"
+     ],
+     "quote": "Offline mode for iPhone arrives in January",
+     "category": "unreleased"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P41",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "TONE-3"
+     ],
+     "quote": "Students should review their flashcards every day",
+     "category": "tone"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P42",
+   "tp": 0,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "TONE-3"
+     ],
+     "quote": "Learners must log their study hours",
+     "category": "tone"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P47",
+   "tp": 4,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹149/month",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P48",
+   "tp": 3,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "invite all users to Lumio Live",
+     "category": "unreleased"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P49",
+   "tp": 2,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-3",
+      "MSG-1"
+     ],
+     "quote": "2 lakh learners",
+     "category": "facts_prices"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  },
+  {
+   "id": "P51",
+   "tp": 2,
+   "fp": [],
+   "fn": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "Diwali offer: 40% off",
+     "category": "outdated_fact"
+    }
+   ],
+   "aiRaw": 0,
+   "aiDiscarded": 0,
+   "aiError": null
+  }
+ ]
+}

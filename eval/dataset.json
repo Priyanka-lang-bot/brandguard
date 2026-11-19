@@ -1,0 +1,880 @@
+{
+ "brand": "Lumio (demo Brand Kit in src/lib/demo-kit.ts)",
+ "evaluated_on": "2026-11-19",
+ "today_for_facts": "2026-11-19",
+ "matching": "A finding is a true positive when it cites one of the expected source codes and its span overlaps the expected quote (one-to-one).",
+ "posts": [
+  {
+   "id": "P01",
+   "channel": "Instagram",
+   "content": "Lumeo makes revision feel lighter. Try a study plan tonight.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-1"
+     ],
+     "quote": "Lumeo",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P02",
+   "channel": "LinkedIn",
+   "content": "Our team at LumIO is hiring a content designer.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-1"
+     ],
+     "quote": "LumIO",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P03",
+   "channel": "Email",
+   "content": "Your Lumio Premium plan renews next month.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-2"
+     ],
+     "quote": "Lumio Premium",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P04",
+   "channel": "Website",
+   "content": "Upgrade to Lumio Pro to unlock every subject.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-2"
+     ],
+     "quote": "Lumio Pro",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P05",
+   "channel": "Blog",
+   "content": "Make ten flash cards for each chapter and test yourself.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-3"
+     ],
+     "quote": "flash cards",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P06",
+   "channel": "Instagram",
+   "content": "Pro tip: colour-code your flash-cards by subject.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-3"
+     ],
+     "quote": "flash-cards",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P07",
+   "channel": "Email",
+   "content": "Login to your account to see this week's plan.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-4"
+     ],
+     "quote": "Login to",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P08",
+   "channel": "Website",
+   "content": "Forgot your password? Use the log-in page to reset it.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-4"
+     ],
+     "quote": "log-in",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P09",
+   "channel": "Email",
+   "content": "We'll send your weekly summary by e-mail every Sunday.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-5"
+     ],
+     "quote": "e-mail",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P10",
+   "channel": "Blog",
+   "content": "Thousands of users revise with Lumio every evening.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-6"
+     ],
+     "quote": "users",
+     "category": "terminology"
+    }
+   ]
+  },
+  {
+   "id": "P11",
+   "channel": "Instagram",
+   "content": "The Lumio app now has a dark theme.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-1"
+     ],
+     "quote": "Lumio app",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P12",
+   "channel": "X / Twitter",
+   "content": "LUMIO turns your notes into a plan.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-1"
+     ],
+     "quote": "LUMIO",
+     "category": "product_name"
+    }
+   ]
+  },
+  {
+   "id": "P13",
+   "channel": "Website",
+   "content": "Lumio Plus costs ₹149 a month.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹149 a month",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P14",
+   "channel": "Instagram",
+   "content": "Get Lumio Plus for just ₹1,499 a year.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹1,499 a year",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P15",
+   "channel": "Blog",
+   "content": "The free plan includes 5 study plans and 200 flashcards.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-2",
+      "MSG-1"
+     ],
+     "quote": "5 study plans",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P16",
+   "channel": "Email",
+   "content": "On the free plan you get unlimited flashcards.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-2",
+      "MSG-1"
+     ],
+     "quote": "unlimited flashcards",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P17",
+   "channel": "LinkedIn",
+   "content": "More than 2 lakh learners study with Lumio.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-3",
+      "MSG-1"
+     ],
+     "quote": "More than 2 lakh learners",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P18",
+   "channel": "Instagram",
+   "content": "Diwali offer: 40% off Lumio Plus, this week only.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "Diwali offer: 40% off Lumio Plus, this week only",
+     "category": "outdated_fact"
+    }
+   ]
+  },
+  {
+   "id": "P19",
+   "channel": "Website",
+   "content": "Offline mode works on Android and iPhone.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-5",
+      "MSG-1",
+      "MSG-2"
+     ],
+     "quote": "Android and iPhone",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P20",
+   "channel": "Email",
+   "content": "Download Lumio on iOS and study offline on the bus.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-5",
+      "MSG-1",
+      "MSG-2"
+     ],
+     "quote": "study offline",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P21",
+   "channel": "Blog",
+   "content": "Lumio Plus is ₹199 per month, or ₹2,199 per year.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹2,199 per year",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P22",
+   "channel": "X / Twitter",
+   "content": "Still time to grab the Diwali deal on Lumio Plus.",
+   "expected": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "grab the Diwali deal",
+     "category": "outdated_fact"
+    }
+   ]
+  },
+  {
+   "id": "P23",
+   "channel": "Instagram",
+   "content": "Lumio Live, our 1:1 tutoring, launches next month.",
+   "expected": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "Lumio Live, our 1:1 tutoring, launches next month",
+     "category": "unreleased"
+    }
+   ]
+  },
+  {
+   "id": "P24",
+   "channel": "Email",
+   "content": "Book your first Lumio Live session with a tutor today.",
+   "expected": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "Book your first Lumio Live session",
+     "category": "unreleased"
+    }
+   ]
+  },
+  {
+   "id": "P25",
+   "channel": "LinkedIn",
+   "content": "Offline mode for iPhone arrives in January.",
+   "expected": [
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-5"
+     ],
+     "quote": "Offline mode for iPhone arrives in January",
+     "category": "unreleased"
+    }
+   ]
+  },
+  {
+   "id": "P26",
+   "channel": "Instagram",
+   "content": "Lumio is the best study app for board exams.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-1"
+     ],
+     "quote": "the best",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P27",
+   "channel": "LinkedIn",
+   "content": "Proud to be India's leading study platform.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-1"
+     ],
+     "quote": "India's leading",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P28",
+   "channel": "Website",
+   "content": "The number one way to revise smarter.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-1"
+     ],
+     "quote": "number one",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P29",
+   "channel": "Blog",
+   "content": "World-class flashcards, built for you.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-1"
+     ],
+     "quote": "World-class",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P30",
+   "channel": "Instagram",
+   "content": "Our study plans guarantee better marks.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-2"
+     ],
+     "quote": "guarantee",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P31",
+   "channel": "Email",
+   "content": "Follow the plan and get 100% results in your boards.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-2"
+     ],
+     "quote": "100% results",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P32",
+   "channel": "Website",
+   "content": "Your notes are 100% safe with Lumio.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-3"
+     ],
+     "quote": "100% safe",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P33",
+   "channel": "Blog",
+   "content": "Lumio is unhackable, so you never have to worry.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-3"
+     ],
+     "quote": "unhackable",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P34",
+   "channel": "Instagram",
+   "content": "Score a top rank this year with Lumio, guaranteed.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-2"
+     ],
+     "quote": "guaranteed",
+     "category": "claims"
+    }
+   ]
+  },
+  {
+   "id": "P35",
+   "channel": "Email",
+   "content": "We hereby confirm your subscription.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "hereby",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P36",
+   "channel": "Email",
+   "content": "You can utilise study plans to organise each week.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "utilise",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P37",
+   "channel": "LinkedIn",
+   "content": "We leverage AI to plan your revision.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "leverage",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P38",
+   "channel": "Website",
+   "content": "Pursuant to your request, your plan has been updated.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "Pursuant to",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P39",
+   "channel": "Instagram",
+   "content": "Results day is here!!! Good luck, everyone.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-2"
+     ],
+     "quote": "!!!",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P40",
+   "channel": "X / Twitter",
+   "content": "New flashcard packs!! Science and maths first.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-2"
+     ],
+     "quote": "!!",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P41",
+   "channel": "Blog",
+   "content": "Students should review their flashcards every day.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-3"
+     ],
+     "quote": "Students should review their flashcards every day",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P42",
+   "channel": "Email",
+   "content": "Learners must log their study hours to see progress.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-3"
+     ],
+     "quote": "Learners must log their study hours",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P43",
+   "channel": "Email",
+   "content": "Your study plan is ready. Click here to open it.",
+   "expected": [
+    {
+     "codes": [
+      "ACC-1"
+     ],
+     "quote": "Click here",
+     "category": "accessibility"
+    }
+   ]
+  },
+  {
+   "id": "P44",
+   "channel": "Blog",
+   "content": "Five ways to revise faster.\n\n![](revision-tips.png)",
+   "expected": [
+    {
+     "codes": [
+      "ACC-2"
+     ],
+     "quote": "![](revision-tips.png)",
+     "category": "accessibility"
+    }
+   ]
+  },
+  {
+   "id": "P45",
+   "channel": "Instagram",
+   "content": "This week's revision streak was insane.",
+   "expected": [
+    {
+     "codes": [
+      "ACC-3"
+     ],
+     "quote": "insane",
+     "category": "accessibility"
+    }
+   ]
+  },
+  {
+   "id": "P46",
+   "channel": "X / Twitter",
+   "content": "Cramming the night before is crazy. Plan ahead instead.",
+   "expected": [
+    {
+     "codes": [
+      "ACC-3"
+     ],
+     "quote": "crazy",
+     "category": "accessibility"
+    }
+   ]
+  },
+  {
+   "id": "P47",
+   "channel": "Instagram",
+   "content": "Big news!! Lumeo is the best study app, and Lumio Pro is only ₹149/month.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-2"
+     ],
+     "quote": "!!",
+     "category": "tone"
+    },
+    {
+     "codes": [
+      "TERM-1"
+     ],
+     "quote": "Lumeo",
+     "category": "product_name"
+    },
+    {
+     "codes": [
+      "CLAIM-1"
+     ],
+     "quote": "the best",
+     "category": "claims"
+    },
+    {
+     "codes": [
+      "TERM-2"
+     ],
+     "quote": "Lumio Pro",
+     "category": "product_name"
+    },
+    {
+     "codes": [
+      "FACT-1",
+      "MSG-1"
+     ],
+     "quote": "₹149/month",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P48",
+   "channel": "Email",
+   "content": "We hereby invite all users to Lumio Live. Click here to join.",
+   "expected": [
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "hereby",
+     "category": "tone"
+    },
+    {
+     "codes": [
+      "TERM-6"
+     ],
+     "quote": "users",
+     "category": "terminology"
+    },
+    {
+     "codes": [
+      "MSG-2",
+      "FACT-4"
+     ],
+     "quote": "invite all users to Lumio Live",
+     "category": "unreleased"
+    },
+    {
+     "codes": [
+      "ACC-1"
+     ],
+     "quote": "Click here",
+     "category": "accessibility"
+    }
+   ]
+  },
+  {
+   "id": "P49",
+   "channel": "LinkedIn",
+   "content": "Lumio is 100% secure and guarantees results for 2 lakh learners.",
+   "expected": [
+    {
+     "codes": [
+      "CLAIM-3"
+     ],
+     "quote": "100% secure",
+     "category": "claims"
+    },
+    {
+     "codes": [
+      "CLAIM-2"
+     ],
+     "quote": "guarantees",
+     "category": "claims"
+    },
+    {
+     "codes": [
+      "FACT-3",
+      "MSG-1"
+     ],
+     "quote": "2 lakh learners",
+     "category": "facts_prices"
+    }
+   ]
+  },
+  {
+   "id": "P50",
+   "channel": "Blog",
+   "content": "Flash cards work. Our users utilise them daily.",
+   "expected": [
+    {
+     "codes": [
+      "TERM-3"
+     ],
+     "quote": "Flash cards",
+     "category": "terminology"
+    },
+    {
+     "codes": [
+      "TERM-6"
+     ],
+     "quote": "users",
+     "category": "terminology"
+    },
+    {
+     "codes": [
+      "TONE-1"
+     ],
+     "quote": "utilise",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P51",
+   "channel": "Website",
+   "content": "Get the Diwali offer: 40% off Lumio Premium!!",
+   "expected": [
+    {
+     "codes": [
+      "FACT-6",
+      "MSG-1"
+     ],
+     "quote": "Diwali offer: 40% off",
+     "category": "outdated_fact"
+    },
+    {
+     "codes": [
+      "TERM-2"
+     ],
+     "quote": "Lumio Premium",
+     "category": "product_name"
+    },
+    {
+     "codes": [
+      "TONE-2"
+     ],
+     "quote": "!!",
+     "category": "tone"
+    }
+   ]
+  },
+  {
+   "id": "P52",
+   "channel": "Instagram",
+   "content": "Got 20 minutes? Pick one chapter, turn it into flashcards and test yourself twice.",
+   "expected": []
+  },
+  {
+   "id": "P53",
+   "channel": "Email",
+   "content": "Your free plan includes up to 3 study plans and 200 flashcards. Sign in to start your first one.",
+   "expected": []
+  },
+  {
+   "id": "P54",
+   "channel": "Website",
+   "content": "Lumio Plus costs ₹199 per month or ₹1,999 per year.",
+   "expected": []
+  },
+  {
+   "id": "P55",
+   "channel": "Blog",
+   "content": "Small, regular revision beats one long night before the exam. We'll help you plan the week.",
+   "expected": []
+  },
+  {
+   "id": "P56",
+   "channel": "LinkedIn",
+   "content": "Lumio encrypts your data in transit and at rest, and we never sell learner data.",
+   "expected": []
+  },
+  {
+   "id": "P57",
+   "channel": "X / Twitter",
+   "content": "Offline mode is available on Android. Download a plan before your train ride.",
+   "expected": []
+  },
+  {
+   "id": "P58",
+   "channel": "Instagram",
+   "content": "Exam season tip: sleep matters as much as revision. Plan breaks into your day.",
+   "expected": []
+  },
+  {
+   "id": "P59",
+   "channel": "Email",
+   "content": "Welcome to Lumio! You can build your first study plan in two minutes.",
+   "expected": []
+  }
+ ]
+}

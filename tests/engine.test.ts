@@ -72,3 +72,13 @@ console.log("\nAll engine tests passed");
   assert.deepEqual(r2.skipped, []);
   console.log("Nested resolution tests passed");
 }
+
+// One finding per span for a term: overlapping or case-duplicate variants must not double-report.
+{
+  const a = deterministicChecks("Your Lumio Premium plan renews.", kit).filter((f) => f.source_type === "term");
+  assert.equal(a.length, 1, JSON.stringify(a));
+  assert.equal(a[0].quote, "Lumio Premium");
+  const b = deterministicChecks("Send it by e-mail.", kit).filter((f) => f.source_type === "term");
+  assert.equal(b.length, 1, JSON.stringify(b));
+  console.log("Term de-duplication tests passed");
+}

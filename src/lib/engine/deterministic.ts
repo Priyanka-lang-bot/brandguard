@@ -22,6 +22,7 @@ function matchCase(source: string, replacement: string): string {
 export function termChecks(content: string, terms: Term[]): Candidate[] {
   const out: Candidate[] = [];
   terms.forEach((term, i) => {
+    const forTerm: Candidate[] = [];
     for (const variant of term.banned) {
       if (!variant.trim()) continue;
       const caseOnly = variant.toLowerCase() === term.preferred.toLowerCase();
@@ -32,7 +33,7 @@ export function termChecks(content: string, terms: Term[]): Candidate[] {
         // Keep the reader's sentence-initial capital unless the preferred term has its own casing.
         const preferredHasCaps = term.preferred !== term.preferred.toLowerCase();
         const suggestion = caseOnly || preferredHasCaps ? term.preferred : matchCase(quote, term.preferred);
-        out.push({
+        forTerm.push({
           category: "terminology",
           severity: "medium",
           quote,
@@ -48,6 +49,14 @@ export function termChecks(content: string, terms: Term[]): Candidate[] {
           engine: "rules",
         });
       }
+    }
+    // One finding per span: variants of the same term can overlap ("Lumio Premium" / "Premium plan") or
+    // match the same words twice ("e-mail" / "E-mail" both match case-insensitively). Keep the earliest, longest.
+    forTerm.sort((a, b) => a.start - b.start || b.end - a.end);
+    for (const c of forTerm) {
+      const last = out[out.length - 1];
+      if (last && last.source_id === c.source_id && c.start < last.end) continue;
+      out.push(c);
     }
   });
   return out;
