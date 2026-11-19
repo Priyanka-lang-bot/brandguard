@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import { ConfidentialTab, SchemaNotice, VisualTab } from "./kit-extras";
 import {
   deleteFact,
   deleteRule,
@@ -18,8 +19,30 @@ import type { BrandKit, Category, Fact, Rule, Term } from "@/lib/types";
 type Result = { ok?: boolean; error?: string } | undefined;
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as Category[];
 
-export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isAdmin: boolean; today: string; aiReady: boolean }) {
-  const [tab, setTab] = useState<"rules" | "terms" | "facts" | "import">("rules");
+type TabId = "rules" | "terms" | "facts" | "visual" | "confidential" | "import";
+
+export function KitEditor({
+  kit,
+  isAdmin,
+  today,
+  aiReady,
+  schemaReady,
+  logoUrls,
+  initialTab,
+  editRuleId,
+}: {
+  kit: BrandKit;
+  isAdmin: boolean;
+  today: string;
+  aiReady: boolean;
+  schemaReady: boolean;
+  logoUrls: Record<string, string>;
+  initialTab?: string;
+  editRuleId?: string;
+}) {
+  const [tab, setTab] = useState<TabId>(
+    (["rules", "terms", "facts", "visual", "confidential", "import"] as const).find((t) => t === initialTab) ?? "rules",
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const run = (fn: () => Promise<Result>, after?: () => void) => {
@@ -37,6 +60,8 @@ export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isA
     { id: "rules" as const, label: `Rules (${active.length})` },
     { id: "terms" as const, label: `Terminology (${kit.terms.length})` },
     { id: "facts" as const, label: `Fact Vault (${kit.facts.length})` },
+    { id: "visual" as const, label: `Visual identity (${(kit.colors ?? []).length + (kit.logos ?? []).length})` },
+    { id: "confidential" as const, label: `Confidential (${(kit.confidential ?? []).length})` },
     ...(isAdmin ? [{ id: "import" as const, label: "Import guideline PDF" }] : []),
   ];
 
@@ -84,7 +109,15 @@ export function KitEditor({ kit, isAdmin, today, aiReady }: { kit: BrandKit; isA
         </p>
       )}
 
-      {tab === "rules" && <RulesTab rules={active} isAdmin={isAdmin} run={run} pending={pending} />}
+      {tab === "rules" && <RulesTab rules={active} isAdmin={isAdmin} run={run} pending={pending} editRuleId={editRuleId} />}
+      {tab === "visual" &&
+        (schemaReady ? (
+          <VisualTab colors={kit.colors ?? []} logos={kit.logos ?? []} logoUrls={logoUrls} isAdmin={isAdmin} run={run} pending={pending} />
+        ) : (
+          <SchemaNotice />
+        ))}
+      {tab === "confidential" &&
+        (schemaReady ? <ConfidentialTab entries={kit.confidential ?? []} isAdmin={isAdmin} run={run} pending={pending} /> : <SchemaNotice />)}
       {tab === "terms" && <TermsTab terms={kit.terms} isAdmin={isAdmin} run={run} pending={pending} />}
       {tab === "facts" && <FactsTab facts={kit.facts} isAdmin={isAdmin} run={run} pending={pending} today={today} />}
       {tab === "import" && isAdmin && <ImportTab aiReady={aiReady} onDone={() => setTab("rules")} />}
@@ -136,8 +169,18 @@ function PendingRules({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin
   );
 }
 
-function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: boolean; run: RunFn; pending: boolean }) {
-  const [editing, setEditing] = useState<Rule | "new" | null>(null);
+const CHECK_KEY_LABEL: Record<string, string> = {
+  palette: "Drives the image palette check",
+  contrast: "Drives the image contrast check",
+  alt_text: "Drives the image alt-text check",
+  logo: "Drives the logo check",
+};
+
+function RulesTab({ rules, isAdmin, run, pending, editRuleId }: { rules: Rule[]; isAdmin: boolean; run: RunFn; pending: boolean; editRuleId?: string }) {
+  const [editing, setEditing] = useState<Rule | "new" | null>(() => (isAdmin && editRuleId ? rules.find((r) => r.id === editRuleId) ?? null : null));
+  useEffect(() => {
+    if (editRuleId) document.getElementById("rule-form")?.scrollIntoView({ block: "start" });
+  }, [editRuleId]);
   return (
     <div className="grid grid-cols-1 gap-4">
       {isAdmin && editing === null && (
@@ -156,7 +199,7 @@ function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: bo
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-mute">{CATEGORY_LABEL[cat]}</h2>
             <div className="card divide-y divide-line">
               {list.map((r) => (
-                <div key={r.id} className="flex flex-wrap items-start gap-3 px-5 py-3">
+                <div key={r.id} id={`rule-${r.id}`} className={`flex flex-wrap items-start gap-3 px-5 py-3 ${editRuleId === r.id ? "bg-brand-500/10" : ""}`}>
                   <code className="mt-0.5 w-14 shrink-0 text-xs font-semibold text-mute sm:w-16">{r.code}</code>
                   <div className="min-w-0 basis-40 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -165,7 +208,11 @@ function RulesTab({ rules, isAdmin, run, pending }: { rules: Rule[]; isAdmin: bo
                     </div>
                     <p className="text-sm text-mute">{r.description}</p>
                     <p className="mt-1 text-xs text-dim">
-                      {r.patterns.length ? `${r.patterns.length} exact pattern${r.patterns.length === 1 ? "" : "s"} + AI check` : "AI check"}
+                      {r.check_key
+                        ? CHECK_KEY_LABEL[r.check_key]
+                        : r.patterns.length
+                          ? `${r.patterns.length} exact pattern${r.patterns.length === 1 ? "" : "s"} + AI check`
+                          : "AI check"}
                       {r.source.startsWith("pdf:") && ` · imported ${r.source.replace("pdf:", "from ")}`}
                     </p>
                   </div>
@@ -202,7 +249,7 @@ function RuleForm({ rule, run, pending, onClose }: { rule: Rule | null; run: Run
     patterns: (rule?.patterns ?? []).join("\n"),
   });
   return (
-    <div className="card grid gap-3 p-5">
+    <div id="rule-form" className="card grid scroll-mt-24 gap-3 p-5">
       <h3 className="font-semibold">{rule ? `Edit ${rule.code}` : "New rule"}</h3>
       <div className="grid gap-3 sm:grid-cols-3">
         <div>

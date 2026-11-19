@@ -14,6 +14,8 @@ export interface ImageAnalysis {
   aiAltText: string | null;
   logo: { checked: boolean; present: boolean; matchedLogoId: string | null; confidence: string; note: string } | null;
   ai: { ran: boolean; error: string | null };
+  /** "seed" when text regions came from a demo image's own design rather than the AI. */
+  textSource?: "ai" | "seed";
 }
 
 export interface ImageRecord {

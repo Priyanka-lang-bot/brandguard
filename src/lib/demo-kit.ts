@@ -7,6 +7,8 @@ export const DEMO_USERS = [
   { email: "creator@brandguard.demo", full_name: "Kabir Creator", role: "creator" as const },
   { email: "reviewer@brandguard.demo", full_name: "Riya Reviewer", role: "reviewer" as const },
 ];
+/** Extra demo creator used only for seeded history (no sign-in button). */
+export const DEMO_EXTRA_CREATOR = { email: "creator2@brandguard.demo", full_name: "Meera Creator", role: "creator" as const };
 export const DEMO_PASSWORD = "brandguard-demo";
 
 export const DEMO_RULES = [
@@ -91,6 +93,7 @@ export const DEMO_RULES = [
     description: "Every image in the content needs alternative text that describes it. In Markdown, ![](image.png) has no alt text.",
     severity: "medium",
     patterns: ["!\\[\\s*\\]\\([^)]*\\)"],
+    check_key: "alt_text",
   },
   {
     code: "ACC-3",
@@ -100,7 +103,47 @@ export const DEMO_RULES = [
     severity: "low",
     patterns: ["\\b(crazy|insane|lame)\\b"],
   },
+  {
+    code: "ACC-4",
+    category: "accessibility",
+    title: "Readable text on images",
+    description: "Text in images must meet WCAG 2.2 AA contrast: at least 4.5:1, or 3:1 for large text.",
+    severity: "high",
+    patterns: [],
+    check_key: "contrast",
+  },
+  {
+    code: "VIS-1",
+    category: "visual",
+    title: "Use the brand palette",
+    description: "Large areas of colour in images must come from the Lumio palette: Indigo, Ink, Sunbeam and Cloud (neutrals are fine).",
+    severity: "medium",
+    patterns: [],
+    check_key: "palette",
+  },
+  {
+    code: "VIS-2",
+    category: "visual",
+    title: "Current logo only",
+    description: "Use the 2026 Lumio shield. The 2023 square badge is retired.",
+    severity: "medium",
+    patterns: [],
+    check_key: "logo",
+  },
 ] as const;
+
+export const DEMO_COLORS = [
+  { name: "Indigo", hex: "#5568F2" },
+  { name: "Ink", hex: "#0F172A" },
+  { name: "Sunbeam", hex: "#FFE14D" },
+  { name: "Cloud", hex: "#F1F5F9" },
+];
+
+export const DEMO_CONFIDENTIAL = [
+  { term: "Lumio Live", kind: "unreleased_product" as const, note: "Not launched; keep out of AI requests." },
+  { term: "Project Falcon", kind: "term" as const, note: "Internal code name." },
+  { term: "LUM-\\d{4}", kind: "pattern" as const, note: "Internal ticket numbers." },
+];
 
 export const DEMO_TERMS = [
   { preferred: "Lumio", banned: ["Lumeo", "LumIO", "LUMIO", "Lumio app"], note: "Our name is always written 'Lumio'." },

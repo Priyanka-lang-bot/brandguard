@@ -37,6 +37,7 @@ export async function analyzeImage(
     const logoPngs = await Promise.all(opts.logos.map(async (l) => ({ logo: l.logo, png: await thumbnail(l.data) })));
     const vision = await analyzeWithVision({ data: buf, mime }, logoPngs, opts.kit);
     analysis.ai.ran = true;
+    analysis.textSource = "ai";
     analysis.aiAltText = vision.altText || null;
     analysis.textBlocks = vision.textBlocks;
     analysis.extractedText = vision.textBlocks.map((b) => b.text).join("\n\n");
@@ -56,15 +57,16 @@ export async function findingsForImages(
   kit: BrandKit,
   meta: { purpose: string; channel: string; title: string },
   cache: CheckCache | null,
+  opts: { ai?: boolean } = {},
 ): Promise<{ findings: Candidate[]; aiErrors: string[] }> {
   const aiErrors: string[] = [];
   const all = await Promise.all(
     images.map(async (img) => {
       const out = imageFindings(img, kit);
-      if (img.analysis?.ai.error) aiErrors.push(`${img.file_name}: ${img.analysis.ai.error}`);
+      if (img.analysis?.ai.error && img.analysis.textSource !== "seed") aiErrors.push(`${img.file_name}: ${img.analysis.ai.error}`);
       const text = img.analysis?.extractedText?.trim();
       if (text) {
-        const res = await runCheck(text, meta, kit, { cache });
+        const res = await runCheck(text, meta, kit, { cache, ai: opts.ai });
         if (!res.aiChecked && res.aiError) aiErrors.push(`${img.file_name} text: ${friendlyAiError(res.aiError)}`);
         out.push(...tagImageTextFindings(res.findings, img.id));
       }

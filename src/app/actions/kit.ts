@@ -7,6 +7,10 @@ import { parsePattern } from "@/lib/engine/deterministic";
 import { extractText } from "@/lib/extract";
 import { seedDemo } from "@/lib/seed";
 import { createServiceClient } from "@/lib/supabase/server";
+import { randomUUID } from "node:crypto";
+import { inspectImage } from "@/lib/images/analyze";
+import { ASSET_BUCKET } from "@/lib/images/store";
+import { validatePattern } from "@/lib/privacy/mask";
 
 const CATEGORIES = ["tone", "terminology", "claims", "messaging", "accessibility", "visual"] as const;
 const SEVERITIES = ["high", "medium", "low"] as const;
@@ -207,4 +211,115 @@ export async function resetDemo() {
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Reset failed" };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Visual identity: palette and logos (migration 0002)
+// ---------------------------------------------------------------------------
+
+export async function saveColor(input: { id?: string; name: string; hex: string }) {
+  return wrap(async () => {
+    const { supabase, profile } = await requireAdmin();
+    const name = input.name.trim();
+    let hex = input.hex.trim();
+    if (/^[0-9A-Fa-f]{6}$/.test(hex)) hex = `#${hex}`;
+    if (!name) throw new Error("Give the colour a name.");
+    if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) throw new Error("Use a 6-digit hex colour such as #5568F2.");
+    const row = { name: name.slice(0, 60), hex: hex.toUpperCase() };
+    const { error } = input.id
+      ? await supabase.from("brand_colors").update(row).eq("id", input.id)
+      : await supabase.from("brand_colors").insert({ ...row, workspace_id: profile.workspace_id });
+    if (error) throw new Error(schemaHint(error.message));
+  })();
+}
+
+export async function deleteColor(id: string) {
+  return wrap(async () => {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("brand_colors").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  })();
+}
+
+export async function uploadLogo(_: unknown, formData: FormData) {
+  try {
+    const { supabase, profile } = await requireAdmin();
+    const file = formData.get("file");
+    const name = String(formData.get("name") ?? "").trim();
+    const version = String(formData.get("version") ?? "").trim() || "current";
+    const isCurrent = formData.get("is_current") === "on";
+    if (!(file instanceof File) || !file.size) return { error: "Choose a PNG or JPG logo file." };
+    if (!name) return { error: "Give the logo a name." };
+    const data = Buffer.from(await file.arrayBuffer());
+    const { mime } = await inspectImage(data);
+    const path = `${profile.workspace_id}/logos/${randomUUID()}.${mime === "image/png" ? "png" : "jpg"}`;
+    const { error: upErr } = await supabase.storage.from(ASSET_BUCKET).upload(path, data, { contentType: mime });
+    if (upErr) return { error: schemaHint(upErr.message) };
+    const { error } = await supabase
+      .from("brand_logos")
+      .insert({ workspace_id: profile.workspace_id, name: name.slice(0, 80), version: version.slice(0, 60), storage_path: path, is_current: isCurrent });
+    if (error) {
+      await supabase.storage.from(ASSET_BUCKET).remove([path]);
+      return { error: schemaHint(error.message) };
+    }
+    revalidatePath("/brand-kit");
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Upload failed" };
+  }
+}
+
+export async function setLogoCurrent(id: string, isCurrent: boolean) {
+  return wrap(async () => {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("brand_logos").update({ is_current: isCurrent }).eq("id", id);
+    if (error) throw new Error(error.message);
+  })();
+}
+
+export async function deleteLogo(id: string) {
+  return wrap(async () => {
+    const { supabase } = await requireAdmin();
+    const { data } = await supabase.from("brand_logos").select("storage_path").eq("id", id).maybeSingle();
+    const { error } = await supabase.from("brand_logos").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    if (data?.storage_path) await supabase.storage.from(ASSET_BUCKET).remove([data.storage_path]);
+  })();
+}
+
+// ---------------------------------------------------------------------------
+// Confidential Terms (masked before any text is sent to the AI)
+// ---------------------------------------------------------------------------
+
+export async function saveConfidential(input: { id?: string; term: string; kind: string; note: string }) {
+  return wrap(async () => {
+    const { supabase, profile } = await requireAdmin();
+    const term = input.term.trim();
+    if (!["term", "unreleased_product", "pattern"].includes(input.kind)) throw new Error("Pick a type.");
+    if (term.length < 2) throw new Error("Enter at least 2 characters.");
+    if (input.kind === "pattern") {
+      const problem = validatePattern(term);
+      if (problem) throw new Error(problem);
+    }
+    const row = { term: term.slice(0, 200), kind: input.kind, note: input.note.trim().slice(0, 300) };
+    const { error } = input.id
+      ? await supabase.from("confidential_terms").update(row).eq("id", input.id)
+      : await supabase.from("confidential_terms").insert({ ...row, workspace_id: profile.workspace_id });
+    if (error) throw new Error(schemaHint(error.message));
+  })();
+}
+
+export async function deleteConfidential(id: string) {
+  return wrap(async () => {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("confidential_terms").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  })();
+}
+
+/** Turn "relation does not exist" into an actionable message. */
+function schemaHint(msg: string) {
+  return /does not exist|schema cache|Bucket not found/i.test(msg)
+    ? "This feature needs the database update in supabase/migrations/0002_final_round.sql. Ask the workspace owner to run it."
+    : msg;
 }

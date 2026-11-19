@@ -5,7 +5,8 @@ import { useMemo, useState, useTransition } from "react";
 import { addComment, recheck, resolveFinding, reviewDecision, submitForReview } from "@/app/actions/drafts";
 import { CategoryBadge, cx, FindingStatusTag, RoleBadge, SeverityBadge, timeAgo } from "@/components/ui";
 import { applyResolutions } from "@/lib/engine/validate";
-import type { Draft, DraftVersion, Finding, Role } from "@/lib/types";
+import type { BrandColor, Draft, DraftVersion, Finding, Role } from "@/lib/types";
+import { ImagePanels, type DraftImageView } from "./image-panel";
 
 interface Event {
   id: number;
@@ -25,6 +26,9 @@ interface Props {
   events: Event[];
   people: Record<string, { full_name: string; role: Role }>;
   sources: Record<string, string>;
+  images: DraftImageView[];
+  imagesEnabled: boolean;
+  palette: BrandColor[];
   canEdit: boolean;
   canReview: boolean;
   isAuthor: boolean;
@@ -203,7 +207,7 @@ function FindingsTab(
       applyResolutions(
         base,
         findings
-          .filter((f) => f.status === "accepted" || f.status === "edited")
+          .filter((f) => !f.image_id && (f.status === "accepted" || f.status === "edited"))
           .map((f) => ({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text ?? "" })),
       ),
     [base, findings],
@@ -250,7 +254,8 @@ function FindingsTab(
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-      {/* Left: the text */}
+      {/* Left: the text and any images */}
+      <div className="grid content-start gap-4">
       <section className="card self-start">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
           <div className="text-sm text-mute">
@@ -294,7 +299,7 @@ function FindingsTab(
               <div className="whitespace-pre-wrap leading-relaxed text-soft">{current.content}</div>
             </>
           ) : (
-            <Highlighted content={base} findings={findings} active={active} onPick={setActive} />
+            <Highlighted content={base} findings={findings.filter((f) => !f.image_id)} active={active} onPick={setActive} />
           )}
         </div>
         {!preview && !needsEdit && findings.length > 0 && (
@@ -307,6 +312,22 @@ function FindingsTab(
           </div>
         )}
       </section>
+      <ImagePanels
+        images={p.images}
+        findings={findings}
+        palette={p.palette}
+        editable={interactive || needsEdit}
+        draftId={p.draft.id}
+        run={run}
+        pending={pending}
+        enabled={p.imagesEnabled}
+        onPickFinding={(id) => {
+          setFilter("all");
+          setActive(id);
+          setTimeout(() => document.getElementById(`finding-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+        }}
+      />
+      </div>
 
       {/* Right: findings + actions */}
       <aside className="grid content-start gap-3">
@@ -386,7 +407,8 @@ function FindingsTab(
             interactive={interactive}
             run={run}
             pending={pending}
-            sourceDetail={p.sources[f.rule_id ?? f.term_id ?? f.fact_id ?? ""]}
+            sourceDetail={p.sources[f.rule_id ?? f.term_id ?? f.fact_id ?? (f.source_label === "Brand Kit palette" ? "image:palette" : "")]}
+            imageName={f.image_id ? p.images.find((i) => i.id === f.image_id)?.file_name : undefined}
           />
         ))}
       </aside>
@@ -463,6 +485,7 @@ function FindingCard({
   run,
   pending,
   sourceDetail,
+  imageName,
 }: {
   f: Finding;
   active: boolean;
@@ -471,6 +494,7 @@ function FindingCard({
   run: (fn: () => Promise<{ error?: string } | { ok: boolean } | undefined>) => void;
   pending: boolean;
   sourceDetail?: string;
+  imageName?: string;
 }) {
   const [mode, setMode] = useState<null | "edit" | "dispute">(null);
   const [text, setText] = useState(f.suggestion || f.quote);
@@ -494,8 +518,17 @@ function FindingCard({
         <FindingStatusTag status={f.status} />
       </div>
 
+      {imageName && (
+        <a
+          href={`#image-${f.image_id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-2 inline-flex items-center gap-1 rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-mute hover:text-fg"
+        >
+          <span aria-hidden>🖼</span> {imageName}
+        </a>
+      )}
       <p className="mt-2 text-sm">
-        <span className="rounded bg-red-500/10 px-1 text-red-300 line-through decoration-red-300">{f.quote}</span>
+        <span className={cx("rounded px-1", f.image_id && f.start_idx === f.end_idx ? "bg-red-500/10 text-red-300" : "bg-red-500/10 text-red-300 line-through decoration-red-300")}>{f.quote}</span>
       </p>
       <p className="mt-2 text-sm text-soft">{f.explanation}</p>
 
@@ -526,7 +559,7 @@ function FindingCard({
       )}
       {(f.status === "accepted" || f.status === "edited") && (
         <p className="mt-3 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">Replaced with</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-emerald-300">{f.image_id ? (f.start_idx === f.end_idx ? "Agreed fix" : "Agreed fix for the image text") : "Replaced with"}</span>
           <span className="block rounded bg-emerald-500/10 px-1 text-emerald-200">{f.resolution_text || <em>(removed)</em>}</span>
         </p>
       )}
@@ -772,6 +805,8 @@ const ACTION_LABEL: Record<string, string> = {
   approved: "approved it",
   changes_requested: "requested changes",
   comment: "commented",
+  image_added: "added an image",
+  image_removed: "removed an image",
 };
 
 function ActivityTab({

@@ -7,7 +7,11 @@ import { altTextProblem, imageFindings, type ImageRecord } from "../src/lib/imag
 import { analyzeImage, findingsForImages } from "../src/lib/images/pipeline";
 import { groundVision } from "../src/lib/images/vision";
 import type { BrandKit } from "../src/lib/types";
-import { makeLogo, makePoster, POSTER } from "./fixtures/poster";
+import { POSTER } from "../src/lib/demo/assets";
+import { DEMO_LOGO_PNG, DEMO_POSTER_PNG } from "../src/lib/demo/embedded";
+
+const makePoster = async () => Buffer.from(DEMO_POSTER_PNG, "base64");
+const makeLogo = async () => Buffer.from(DEMO_LOGO_PNG, "base64");
 import { testKit } from "./helpers";
 
 const PALETTE = [
@@ -26,11 +30,12 @@ function kit(): BrandKit {
   k.logos = LOGOS;
   // Mirror the seeded demo kit: rules wired to the image checks.
   k.rules = k.rules.map((r) => (r.code === "ACC-2" ? { ...r, check_key: "alt_text" as const } : r));
-  k.rules.push(
+  const extra: BrandKit["rules"] = [
     { id: "rule:VIS-1", code: "VIS-1", category: "visual", title: "Use the brand palette", description: "x", severity: "medium", patterns: [], status: "active", source: "manual", check_key: "palette" },
     { id: "rule:ACC-4", code: "ACC-4", category: "accessibility", title: "Readable text on images", description: "x", severity: "high", patterns: [], status: "active", source: "manual", check_key: "contrast" },
     { id: "rule:VIS-2", code: "VIS-2", category: "visual", title: "Current logo only", description: "x", severity: "medium", patterns: [], status: "active", source: "manual", check_key: "logo" },
-  );
+  ];
+  for (const r of extra) if (!k.rules.some((x) => x.code === r.code)) k.rules.push(r);
   return k;
 }
 

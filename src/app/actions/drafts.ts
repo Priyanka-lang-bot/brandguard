@@ -8,7 +8,9 @@ import { runCheck } from "@/lib/engine";
 import { applyResolutions } from "@/lib/engine/validate";
 import { extractText } from "@/lib/extract";
 import { toRow } from "@/lib/engine/rows";
-import type { Draft, DraftVersion, Finding } from "@/lib/types";
+import type { BrandKit, Draft, DraftVersion, Finding } from "@/lib/types";
+import { findingsForImages } from "@/lib/images/pipeline";
+import { attachImage, dbCache, DRAFT_BUCKET, loadDraftImages, MAX_IMAGES_PER_DRAFT, readImageUploads } from "@/lib/images/store";
 
 const MAX_CHARS = 20000;
 type Supa = Awaited<ReturnType<typeof requireProfile>>["supabase"];
@@ -17,7 +19,30 @@ async function logEvent(supabase: Supa, draft_id: string, actor_id: string, acti
   await supabase.from("draft_events").insert({ draft_id, actor_id, action, detail, version_no });
 }
 
-/** Create a new version, run the checks on it and store the findings. */
+/** True for the finding that asks for alt text on an image (its resolution becomes the image's alt text). */
+function isAltTextFinding(f: Pick<Finding, "image_id" | "rule_id" | "source_label">, kit: BrandKit) {
+  if (!f.image_id) return false;
+  const altRule = kit.rules.find((r) => r.check_key === "alt_text");
+  return altRule ? f.rule_id === altRule.id : f.source_label === "Image alt text";
+}
+
+/** Text resolutions only: image findings never change the draft text. */
+const textFixes = (list: Finding[]) =>
+  list
+    .filter((f) => !f.image_id && (f.status === "accepted" || f.status === "edited"))
+    .map((f) => ({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text ?? "" }));
+
+/** Accepted / edited alt-text findings update the image's alt text. */
+async function applyAltText(supabase: Supa, findings: Finding[], kit: BrandKit) {
+  const updates = findings.filter((f) => (f.status === "accepted" || f.status === "edited") && isAltTextFinding(f, kit));
+  for (const f of updates) {
+    const alt = (f.resolution_text ?? "").trim();
+    if (alt) await supabase.from("draft_images").update({ alt_text: alt.slice(0, 500) }).eq("id", f.image_id!);
+  }
+  return updates.length;
+}
+
+/** Create a new version, run the checks on it (text and images) and store the findings. */
 async function addCheckedVersion(
   supabase: Supa,
   userId: string,
@@ -26,9 +51,15 @@ async function addCheckedVersion(
   note: string,
   previousCheckedVersionId: string | null,
   sourceFile: string | null = null,
+  kitIn?: BrandKit,
 ) {
-  const kit = await loadKit(supabase);
-  const result = await runCheck(content, draft, kit);
+  const kit = kitIn ?? (await loadKit(supabase));
+  const cache = dbCache(supabase, draft.workspace_id);
+  const images = await loadDraftImages(supabase, draft.id);
+  const [result, imageResult] = await Promise.all([
+    runCheck(content, draft, kit, { cache }),
+    images.length ? findingsForImages(images, kit, draft, cache) : Promise.resolve({ findings: [], aiErrors: [] as string[] }),
+  ]);
   const version_no = draft.current_version;
 
   const { data: version, error } = await supabase
@@ -47,22 +78,26 @@ async function addCheckedVersion(
     .single();
   if (error) throw new Error(error.message);
 
-  // Disputes carry over: the same source flagging the same words again inherits the dispute.
-  let carried: Pick<Finding, "quote" | "rule_id" | "term_id" | "fact_id" | "dispute_reason">[] = [];
+  // Disputes carry over: the same source flagging the same words (in the same image) again inherits the dispute.
+  let carried: Pick<Finding, "quote" | "rule_id" | "term_id" | "fact_id" | "dispute_reason" | "image_id" | "source_label">[] = [];
   if (previousCheckedVersionId) {
     const { data } = await supabase
       .from("findings")
-      .select("quote, rule_id, term_id, fact_id, dispute_reason")
+      .select("*")
       .eq("version_id", previousCheckedVersionId)
       .eq("status", "disputed");
     carried = data ?? [];
   }
 
   const now = new Date().toISOString();
-  const rows = result.findings.map((c) => {
+  const all = [...result.findings, ...imageResult.findings];
+  const rows = all.map((c) => {
     const row: Record<string, unknown> = toRow(c, version.id, draft.id);
     const match = carried.find(
-      (d) => d.quote === c.quote && (d.rule_id ?? d.term_id ?? d.fact_id) === c.source_id,
+      (d) =>
+        d.quote === c.quote &&
+        (d.image_id ?? null) === (c.image_id ?? null) &&
+        ((d.rule_id ?? d.term_id ?? d.fact_id) === c.source_id || (c.source_type === "image" && d.source_label === c.source_label)),
     );
     if (match) {
       row.status = "disputed";
@@ -76,14 +111,17 @@ async function addCheckedVersion(
     const { error: fErr } = await supabase.from("findings").insert(rows);
     if (fErr) throw new Error(fErr.message);
   }
-  await logEvent(
-    supabase,
-    draft.id,
-    userId,
-    "checked",
-    `${rows.length} finding${rows.length === 1 ? "" : "s"}${result.aiChecked ? " (rules + AI)" : ` — rule checks only (AI pass failed: ${friendlyAiError(result.aiError)})`}`,
-    version_no,
-  );
+  const parts = [
+    `${rows.length} finding${rows.length === 1 ? "" : "s"}`,
+    result.aiChecked
+      ? result.fromCache
+        ? "(rules + AI, AI result reused from cache)"
+        : "(rules + AI)"
+      : `— rule checks only (AI pass failed: ${friendlyAiError(result.aiError)})`,
+  ];
+  if (images.length) parts.push(`· ${images.length} image${images.length === 1 ? "" : "s"} checked`);
+  if (imageResult.aiErrors.length) parts.push(`· image AI checks incomplete (${imageResult.aiErrors.join("; ")})`);
+  await logEvent(supabase, draft.id, userId, "checked", parts.join(" "), version_no);
   return { version: version as DraftVersion, result };
 }
 
@@ -96,17 +134,19 @@ export async function createDraft(_: unknown, formData: FormData) {
   const file = formData.get("file");
   let sourceFile: string | null = null;
 
+  let uploads: Awaited<ReturnType<typeof readImageUploads>> = [];
   try {
     if (file instanceof File && file.size > 0) {
       content = await extractText(file);
       sourceFile = file.name;
     }
+    uploads = await readImageUploads(formData);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not read the file" };
   }
   content = content.replace(/\r\n/g, "\n").trim();
   if (!title) return { error: "Give the draft a title." };
-  if (!content) return { error: "Paste some content or upload a file." };
+  if (!content && !uploads.length) return { error: "Paste some content, upload a file or attach an image." };
   if (content.length > MAX_CHARS) return { error: `Content is too long (${content.length} characters, limit ${MAX_CHARS}).` };
 
   const { data: draft, error } = await supabase
@@ -118,7 +158,12 @@ export async function createDraft(_: unknown, formData: FormData) {
   await logEvent(supabase, draft.id, user.id, "created", sourceFile ? `Uploaded ${sourceFile}` : "Draft created", 1);
 
   try {
-    await addCheckedVersion(supabase, user.id, draft as Draft, content, sourceFile ? `Imported from ${sourceFile}` : "First draft", null, sourceFile);
+    const kit = await loadKit(supabase);
+    for (const u of uploads) {
+      await attachImage(supabase, { workspaceId: profile.workspace_id, draftId: draft.id, userId: user.id, kit }, u);
+    }
+    if (uploads.length) await logEvent(supabase, draft.id, user.id, "image_added", uploads.map((u) => u.name).join(", "), 1);
+    await addCheckedVersion(supabase, user.id, draft as Draft, content, sourceFile ? `Imported from ${sourceFile}` : "First draft", null, sourceFile, kit);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Check failed" };
   }
@@ -178,27 +223,31 @@ async function currentVersions(supabase: Supa, draft: Draft) {
 
 /** Apply resolved fixes (or use edited text) as a new version and re-run the checks. */
 export async function recheck(draftId: string, editedContent?: string) {
+  return recheckWithNote(draftId, editedContent);
+}
+
+async function recheckWithNote(draftId: string, editedContent?: string, forcedNote?: string) {
   try {
     const { supabase, user, draft } = await loadOwnDraft(draftId);
     const { current, checked } = await currentVersions(supabase, draft);
+    const kit = await loadKit(supabase);
     let content: string;
-    let note: string;
+    let note: string | undefined = forcedNote;
     if (editedContent !== undefined) {
       content = editedContent.replace(/\r\n/g, "\n").trim();
-      note = "Edited by author";
-      if (!content) return { error: "The draft can't be empty." };
+      note = note ?? "Edited by author";
+      const hasImages = (await loadDraftImages(supabase, draft.id)).length > 0;
+      if (!content && !hasImages) return { error: "The draft can't be empty." };
       if (content.length > MAX_CHARS) return { error: `Content is too long (limit ${MAX_CHARS}).` };
     } else {
       const { data: findings } = await supabase.from("findings").select("*").eq("version_id", current.id);
-      const res = (findings ?? []).filter((f) => f.status === "accepted" || f.status === "edited");
-      content = applyResolutions(
-        current.content,
-        res.map((f) => ({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text ?? "" })),
-      ).text;
-      note = `Applied ${res.length} fix${res.length === 1 ? "" : "es"}`;
+      const fixes = textFixes((findings ?? []) as Finding[]);
+      content = applyResolutions(current.content, fixes).text;
+      const alt = await applyAltText(supabase, (findings ?? []) as Finding[], kit);
+      note = note ?? `Applied ${fixes.length + alt} fix${fixes.length + alt === 1 ? "" : "es"}`;
     }
     const next = { ...draft, current_version: draft.current_version + 1 };
-    await addCheckedVersion(supabase, user.id, next, content, note, checked?.id ?? null);
+    await addCheckedVersion(supabase, user.id, next, content, note, checked?.id ?? null, null, kit);
     const { error } = await supabase
       .from("drafts")
       .update({ current_version: next.current_version, updated_at: new Date().toISOString() })
@@ -222,12 +271,10 @@ export async function submitForReview(draftId: string) {
     if (open.length) return { error: `Resolve the ${open.length} open finding${open.length === 1 ? "" : "s"} first.` };
 
     let versionNo = draft.current_version;
-    const fixes = list.filter((f) => f.status === "accepted" || f.status === "edited");
+    await applyAltText(supabase, list, await loadKit(supabase));
+    const fixes = textFixes(list);
     if (fixes.length) {
-      const { text, skipped } = applyResolutions(
-        current.content,
-        fixes.map((f) => ({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text ?? "" })),
-      );
+      const { text, skipped } = applyResolutions(current.content, fixes);
       if (skipped.length) return { error: "Two of your fixes overlap. Re-check the draft so they can be applied cleanly." };
       versionNo += 1;
       const { error } = await supabase.from("draft_versions").insert({
@@ -298,4 +345,39 @@ export async function addComment(draftId: string, comment: string) {
   await logEvent(supabase, draftId, user.id, "comment", comment.trim());
   revalidatePath(`/drafts/${draftId}`);
   return { ok: true };
+}
+
+/** Attach an image to an editable draft, then re-check (creates a new version). */
+export async function addImage(draftId: string, formData: FormData) {
+  try {
+    const { supabase, user, draft } = await loadOwnDraft(draftId);
+    const uploads = await readImageUploads(formData);
+    if (!uploads.length) return { error: "Choose a PNG or JPG image." };
+    const existing = await loadDraftImages(supabase, draft.id);
+    if (existing.length + uploads.length > MAX_IMAGES_PER_DRAFT) return { error: `A draft can have at most ${MAX_IMAGES_PER_DRAFT} images.` };
+    const kit = await loadKit(supabase);
+    for (const u of uploads) await attachImage(supabase, { workspaceId: draft.workspace_id, draftId: draft.id, userId: user.id, kit }, u);
+    await logEvent(supabase, draft.id, user.id, "image_added", uploads.map((u) => u.name).join(", "));
+    return await recheckWithNote(draftId, undefined, `Added ${uploads.map((u) => u.name).join(", ")}`);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not add the image" };
+  }
+}
+
+/** Remove an image from an editable draft, then re-check. */
+export async function removeImage(imageId: string) {
+  try {
+    const ctx = await requireProfile();
+    const { data: img } = await ctx.supabase.from("draft_images").select("id, draft_id, storage_path, file_name").eq("id", imageId).maybeSingle();
+    if (!img) return { error: "Image not found" };
+    const { supabase, user, draft } = await loadOwnDraft(img.draft_id);
+    const { data: deleted, error } = await supabase.from("draft_images").delete().eq("id", imageId).select("id");
+    if (error) return { error: error.message };
+    if (!deleted?.length) return { error: "You can't remove this image." };
+    await supabase.storage.from(DRAFT_BUCKET).remove([img.storage_path]);
+    await logEvent(supabase, draft.id, user.id, "image_removed", img.file_name);
+    return await recheckWithNote(draft.id, undefined, `Removed ${img.file_name}`);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not remove the image" };
+  }
 }

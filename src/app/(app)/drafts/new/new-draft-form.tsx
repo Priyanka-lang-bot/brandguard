@@ -31,6 +31,8 @@ Small, regular revision beats one long night before the exam. Your free Lumio pl
 export function NewDraftForm() {
   const [state, action, pending] = useActionState(createDraft, null);
   const [mode, setMode] = useState<"paste" | "upload">("paste");
+  const [images, setImages] = useState<{ name: string; size: number; url: string }[]>([]);
+  const totalMb = images.reduce((n, i) => n + i.size, 0) / 1024 / 1024;
   const form = useRef<HTMLFormElement>(null);
 
   const fill = (s: (typeof SAMPLES)[number]) => {
@@ -110,6 +112,42 @@ export function NewDraftForm() {
           </div>
         )}
       </div>
+
+      <fieldset className="grid gap-3 rounded-lg border border-line p-4">
+        <legend className="px-1 text-sm font-medium text-soft">Images (optional)</legend>
+        <p className="-mt-1 text-xs text-mute">
+          PNG or JPG, up to 4 images. BrandGuard measures colours against the Brand Kit palette and checks text contrast and alt text. If the
+          AI is available it also reads the text in the image and looks for your logo. Images are sent to the AI as they are, so don&apos;t
+          upload images that show confidential information.
+        </p>
+        <input
+          name="images"
+          type="file"
+          multiple
+          accept="image/png,image/jpeg"
+          aria-label="Attach images"
+          className="text-sm"
+          onChange={(e) => {
+            images.forEach((i) => URL.revokeObjectURL(i.url));
+            setImages([...(e.target.files ?? [])].slice(0, 4).map((f) => ({ name: f.name, size: f.size, url: URL.createObjectURL(f) })));
+          }}
+        />
+        {images.map((img, i) => (
+          <div key={img.url} className="grid grid-cols-[64px_1fr] items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img.url} alt="" className="h-16 w-16 rounded-md object-cover ring-1 ring-line" />
+            <div>
+              <label className="label text-xs" htmlFor={`alt-${i}`}>Alt text for {img.name}</label>
+              <input id={`alt-${i}`} name="image_alt" className="input" placeholder="Describe what the image shows (leave empty to get a suggestion)" />
+            </div>
+          </div>
+        ))}
+        {totalMb > 4.2 && (
+          <p role="alert" className="text-xs text-amber-300">
+            These images add up to {totalMb.toFixed(1)} MB. Uploads are limited to about 4 MB per request, so attach fewer here and add the rest from the draft page.
+          </p>
+        )}
+      </fieldset>
 
       {state?.error && (
         <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
