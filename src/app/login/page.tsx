@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { demoSignIn } from "@/app/actions/auth";
 import { Logo } from "@/components/ui";
 import { LoginForm } from "./login-form";
@@ -29,7 +30,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="min-h-screen ">
       <div className="mx-auto grid max-w-5xl gap-10 px-6 py-14 lg:grid-cols-[1.2fr_1fr] lg:py-20">
         <section>
-          <Logo className="text-xl" />
+          <div className="flex items-center justify-between gap-4">
+            <Link href="/" aria-label="BrandGuard home"><Logo className="text-xl" /></Link>
+            <Link href="/" className="text-sm text-mute hover:text-fg">← Back to the website</Link>
+          </div>
           <h1 className="mt-8 text-4xl font-semibold leading-tight tracking-tight text-fg">
             Catch off-brand content
             <br />
