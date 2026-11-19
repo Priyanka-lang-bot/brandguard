@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireProfile } from "@/lib/data";
+import { loadKit, requireProfile } from "@/lib/data";
 import { aiAvailable, extractRules } from "@/lib/engine/gemini";
 import { parsePattern } from "@/lib/engine/deterministic";
 import { extractText } from "@/lib/extract";
@@ -161,7 +161,7 @@ export async function importGuidelines(_: unknown, formData: FormData) {
     if (!(file instanceof File) || !file.size) return { error: "Choose a PDF, DOCX or text file." };
     const text = await extractText(file);
     if (text.length < 40) return { error: "Couldn't find readable text in that file (scanned PDFs aren't supported yet)." };
-    const extracted = await extractRules(text);
+    const extracted = await extractRules(text, await loadKit(supabase));
     if (!extracted.length) return { error: "No checkable rules were found in that document." };
 
     const counters: Record<string, number> = {};

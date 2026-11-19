@@ -15,16 +15,33 @@ export async function requireProfile() {
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
-/** Active Brand Kit. Terms are ordered by creation so TERM-n codes stay stable. */
+/** Active Brand Kit. Terms are ordered by creation so TERM-n codes stay stable.
+ *  Tables added by migration 0002 are optional: if they are missing the kit simply has no entries for them. */
 export async function loadKit(supabase: Client, includeInactive = false): Promise<BrandKit> {
   let rulesQ = supabase.from("guideline_rules").select("*").order("category").order("code");
   if (!includeInactive) rulesQ = rulesQ.eq("status", "active");
-  const [rules, terms, facts] = await Promise.all([
+  const [rules, terms, facts, confidential, colors, logos] = await Promise.all([
     rulesQ,
     supabase.from("terms").select("*").order("created_at").order("id"),
     supabase.from("facts").select("*").order("code"),
+    supabase.from("confidential_terms").select("id, term, kind, note").order("created_at"),
+    supabase.from("brand_colors").select("id, name, hex").order("created_at"),
+    supabase.from("brand_logos").select("id, name, version, storage_path, is_current").order("created_at"),
   ]);
-  return { rules: rules.data ?? [], terms: terms.data ?? [], facts: facts.data ?? [] };
+  return {
+    rules: rules.data ?? [],
+    terms: terms.data ?? [],
+    facts: facts.data ?? [],
+    confidential: confidential.error ? [] : (confidential.data ?? []),
+    colors: colors.error ? [] : (colors.data ?? []),
+    logos: logos.error ? [] : (logos.data ?? []),
+  };
+}
+
+/** True when migration 0002 (images, insights, masking tables) has been applied. */
+export async function hasFinalRoundSchema(supabase: Client): Promise<boolean> {
+  const { error } = await supabase.from("workspace_settings").select("workspace_id").limit(1);
+  return !error;
 }
 
 export async function profileMap(supabase: Client) {

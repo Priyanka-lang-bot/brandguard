@@ -33,10 +33,35 @@ export interface Fact {
   valid_until: string | null;
 }
 
+export interface ConfidentialEntry {
+  id: string;
+  term: string;
+  kind: "term" | "unreleased_product" | "pattern";
+  note: string;
+}
+
+export interface BrandColor {
+  id: string;
+  name: string;
+  hex: string;
+}
+
+export interface BrandLogo {
+  id: string;
+  name: string;
+  version: string;
+  storage_path: string;
+  is_current: boolean;
+}
+
 export interface BrandKit {
   rules: Rule[];
   terms: Term[];
   facts: Fact[];
+  /** Confidential Terms section (masking). Empty when the 0002 migration has not been applied. */
+  confidential?: ConfidentialEntry[];
+  colors?: BrandColor[];
+  logos?: BrandLogo[];
 }
 
 /** A finding produced by the engine, before it is stored. */
