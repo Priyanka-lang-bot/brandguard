@@ -95,10 +95,10 @@ async def main():
         await first.get_by_role("button", name="Accept fix").click()
         await page.wait_for_timeout(1200)
         ok("accept fix", await page.get_by_text("Fix accepted").count() >= 1)
-        edit_card = cards.filter(has_text="TONE-2").first
+        edit_card = cards.filter(has_text="TERM-1").first
         if await edit_card.count():
             await edit_card.get_by_role("button", name="Edit").click()
-            await edit_card.locator("textarea").fill("!")
+            await edit_card.locator("textarea").fill("Lumio")
             await edit_card.get_by_role("button", name="Use this wording").click()
             await page.wait_for_timeout(1200)
         ok("edit fix", await page.get_by_text("Edited fix").count() >= 1)
