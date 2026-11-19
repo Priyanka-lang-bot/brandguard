@@ -170,24 +170,38 @@ export function mergeFindings(rules: Candidate[], ai: Candidate[]): Candidate[] 
 }
 
 /**
- * Build the next version's text from the creator's resolutions. Accepted/edited findings
- * replace their span; overlapping later spans are skipped and reported.
+ * Build the next version's text from the creator's resolutions. Accepted/edited findings replace their span.
+ * A fix nested inside another accepted fix (e.g. a terminology fix inside a rewritten sentence) is applied to
+ * the outer replacement when its original words still appear there; otherwise it is reported as skipped.
+ * Partially overlapping spans are skipped and reported.
  */
 export function applyResolutions(
   content: string,
   resolutions: { id: string; start: number; end: number; text: string }[],
-): { text: string; skipped: string[] } {
-  const sorted = [...resolutions].sort((a, b) => a.start - b.start || a.end - b.end);
-  const chosen: typeof sorted = [];
+): { text: string; skipped: string[]; merged: string[] } {
+  const sorted = [...resolutions].sort((a, b) => a.start - b.start || b.end - a.end);
+  const chosen: { id: string; start: number; end: number; text: string }[] = [];
   const skipped: string[] = [];
+  const merged: string[] = [];
   for (const r of sorted) {
     const last = chosen[chosen.length - 1];
-    if (last && r.start < last.end) skipped.push(r.id);
-    else chosen.push(r);
+    if (last && r.start < last.end) {
+      const nested = r.start >= last.start && r.end <= last.end;
+      const original = content.slice(r.start, r.end);
+      if (nested && original && last.text.includes(original)) {
+        last.text = last.text.replace(original, r.text);
+        merged.push(r.id);
+      } else if (nested && original && !last.text.includes(original)) {
+        // The outer fix already rewrote these words; nothing left to change.
+        merged.push(r.id);
+      } else {
+        skipped.push(r.id);
+      }
+    } else chosen.push({ ...r });
   }
   let text = content;
   for (const r of [...chosen].reverse()) {
     text = text.slice(0, r.start) + r.text + text.slice(r.end);
   }
-  return { text, skipped };
+  return { text, skipped, merged };
 }

@@ -41,7 +41,14 @@ type Tab = "findings" | "changes" | "history" | "activity";
 export function DraftWorkspace(p: Props) {
   const current = p.versions.find((v) => v.id === p.currentId)!;
   const checked = p.versions.find((v) => v.id === p.checkedId) ?? null;
-  const findings = useMemo(() => p.findings.filter((f) => f.version_id === p.checkedId), [p.findings, p.checkedId]);
+  // Text findings in reading order first, then image findings grouped by image.
+  const findings = useMemo(
+    () =>
+      p.findings
+        .filter((f) => f.version_id === p.checkedId)
+        .sort((a, b) => Number(Boolean(a.image_id)) - Number(Boolean(b.image_id)) || (a.image_id ?? "").localeCompare(b.image_id ?? "") || a.start_idx - b.start_idx),
+    [p.findings, p.checkedId],
+  );
   const interactive = p.canEdit && current.checked;
   const [tab, setTab] = useState<Tab>("findings");
   const [error, setError] = useState<string | null>(null);

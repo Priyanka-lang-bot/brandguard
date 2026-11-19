@@ -1,5 +1,5 @@
 import type { BrandKit, Candidate, Category, Rule, Severity } from "../types";
-import { fixContrast, hexToRgb, isNeutral, nearestColor, rgbToHex } from "./color";
+import { fixContrast, hexToRgb, isNeutral, nearestColor, relativeLuminance, rgbToHex } from "./color";
 import type { MeasuredColor, RegionContrast } from "./analyze";
 
 /** Stored in draft_images.analysis. Re-used on every re-check, so the image is analysed only once. */
@@ -138,7 +138,9 @@ export function imageFindings(img: ImageRecord, kit: BrandKit): Candidate[] {
         imageCandidate(src, img.id, {
           quote: snippet.replace(/\n/g, " "),
           explanation: `Measured contrast ${r.ratio.toFixed(2)}:1 (text ${r.fg} on ${r.bg}). WCAG 2.2 AA requires at least ${r.required}:1 for ${r.large ? "large" : "normal-size"} text.`,
-          suggestion: fixed ? `Change the text colour to ${rgbToHex(fixed)} or darker/stronger (≥ ${r.required}:1 on ${r.bg})` : `Change the background behind this text so it reaches ${r.required}:1`,
+          suggestion: fixed
+            ? `Use a text colour of ${rgbToHex(fixed)} or ${relativeLuminance(fixed) < relativeLuminance(hexToRgb(r.fg)) ? "darker" : "lighter"} (reaches ${r.required}:1 on ${r.bg})`
+            : `Change the background behind this text so it reaches ${r.required}:1`,
         }),
       );
     }

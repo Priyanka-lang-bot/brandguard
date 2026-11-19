@@ -7,8 +7,9 @@ import type { RawAiFinding } from "./validate";
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 /** Used when the main model reports high demand (429/5xx). */
 const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
-const ENDPOINT = (model: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+/** GEMINI_API_BASE exists for local end-to-end tests against a stub server; production uses Google's endpoint. */
+const API_BASE = process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com";
+const ENDPOINT = (model: string) => `${API_BASE}/v1beta/models/${model}:generateContent`;
 
 export const aiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 
@@ -111,7 +112,7 @@ export async function pingGemini(opts: { models?: string[]; thinking?: string } 
     }
   };
   const list = await timed(
-    () => fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": key } }),
+    () => fetch(`${API_BASE}/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": key } }),
     10000,
   );
   let available: string[] = [];

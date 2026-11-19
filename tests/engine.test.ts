@@ -52,3 +52,23 @@ const r = applyResolutions("Hello big world", [
 assert.equal(r.text, "Hi small world");
 assert.deepEqual(r.skipped, ["b"]);
 console.log("\nAll engine tests passed");
+
+// Nested fixes compose: a term fix inside an accepted sentence rewrite is applied to the rewrite.
+{
+  const text = "We are the best app, trusted by users.";
+  const r = applyResolutions(text, [
+    { id: "outer", start: 7, end: 37, text: "a popular app, trusted by users" },
+    { id: "inner", start: 32, end: 37, text: "learners" },
+  ]);
+  assert.equal(r.text, "We are a popular app, trusted by learners.");
+  assert.deepEqual(r.merged, ["inner"]);
+  assert.deepEqual(r.skipped, []);
+  // Outer rewrite that already dropped the words: inner is satisfied, nothing skipped.
+  const r2 = applyResolutions(text, [
+    { id: "outer", start: 7, end: 37, text: "a study app" },
+    { id: "inner", start: 32, end: 37, text: "learners" },
+  ]);
+  assert.equal(r2.text, "We are a study app.");
+  assert.deepEqual(r2.skipped, []);
+  console.log("Nested resolution tests passed");
+}
