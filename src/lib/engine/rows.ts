@@ -18,5 +18,6 @@ export function toRow(c: Candidate, version_id: string, draft_id: string) {
     explanation: c.explanation,
     suggestion: c.suggestion,
     engine: c.engine,
+    ...(c.image_id ? { image_id: c.image_id } : {}),
   };
 }

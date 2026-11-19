@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
     "test:sql": "bash scripts/test-sql.sh"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
     "unpdf": "^1.9.1",
     "zod": "^4.6.7"
   },

@@ -3,7 +3,7 @@ export type Category = "tone" | "terminology" | "claims" | "messaging" | "access
 export type Severity = "high" | "medium" | "low";
 export type DraftStatus = "draft" | "in_review" | "changes_requested" | "approved";
 export type FindingStatus = "open" | "accepted" | "edited" | "disputed";
-export type SourceType = "rule" | "term" | "fact";
+export type SourceType = "rule" | "term" | "fact" | "image";
 
 export interface Rule {
   id: string;
@@ -16,6 +16,8 @@ export interface Rule {
   status: "active" | "pending" | "rejected";
   source: string;
   source_excerpt?: string | null;
+  /** Marks the rule that drives a built-in image check (migration 0002). */
+  check_key?: "palette" | "contrast" | "alt_text" | "logo" | null;
 }
 
 export interface Term {
@@ -77,6 +79,8 @@ export interface Candidate {
   explanation: string;
   suggestion: string;
   engine: "rules" | "ai";
+  /** Set for findings about an attached image (or text inside it). */
+  image_id?: string | null;
 }
 
 export interface Finding {
@@ -100,6 +104,7 @@ export interface Finding {
   resolution_text: string | null;
   dispute_reason: string | null;
   resolved_at: string | null;
+  image_id?: string | null;
 }
 
 export interface Draft {

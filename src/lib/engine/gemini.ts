@@ -28,7 +28,9 @@ async function requestGemini(body: object, key: string, signal: AbortSignal, mod
   });
 }
 
-async function callGemini(system: string, user: string, schema: object, timeoutMs = 40000): Promise<unknown> {
+export type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
+
+export async function callGemini(system: string, user: string | GeminiPart[], schema: object, timeoutMs = 40000): Promise<unknown> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not set");
   const ctrl = new AbortController();
@@ -36,7 +38,7 @@ async function callGemini(system: string, user: string, schema: object, timeoutM
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const base = {
     systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts: [{ text: user }] }],
+    contents: [{ role: "user", parts: typeof user === "string" ? [{ text: user }] : user }],
   };
   const config = { temperature: 0.1, responseMimeType: "application/json", responseSchema: schema };
   try {
