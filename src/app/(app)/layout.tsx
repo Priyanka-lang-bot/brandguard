@@ -22,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {profile.role === "admin" && <NavLink href="/insights">Insights</NavLink>}
           </nav>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link href="/ai-disclosure" className="hidden text-xs text-mute hover:text-fg md:inline">AI disclosure</Link>
             {isDemo ? (
               <RoleSwitcher current={profile.role} />
             ) : (

@@ -1,6 +1,7 @@
 import type { BrandKit } from "../types";
 import { createMasker, type Masker } from "../privacy/mask";
 import { maskConfigFromKit } from "../privacy/config";
+import { selectKit, type KitSelection } from "./retrieval";
 import type { RawAiFinding } from "./validate";
 
 // gemini-flash-latest stopped answering in Nov 2026 and the 2.x models are retired; 3.5 Flash answers in ~1-2s.
@@ -155,15 +156,18 @@ export async function pingGemini(opts: { models?: string[]; thinking?: string } 
   return { configuredModel: MODEL, listModels: { status: list.status, ms: list.ms, flashModels: available.slice(0, 30) }, tries };
 }
 
-export function kitAsPrompt(kit: BrandKit, today: string): string {
+export function kitAsPrompt(kit: BrandKit, today: string, sel: KitSelection | null = null): string {
   const rules = kit.rules
-    .filter((r) => r.status === "active")
+    .filter((r) => r.status === "active" && (!sel || sel.rules.has(r.id)))
     .map((r) => `[${r.code}] (${r.category}, ${r.severity}) ${r.title}: ${r.description}`)
     .join("\n");
+  // TERM-n numbers always follow the full kit order, even when only some terms are sent.
   const terms = kit.terms
-    .map((t, i) => `[TERM-${i + 1}] Use "${t.preferred}". Never: ${t.banned.map((b) => `"${b}"`).join(", ")}.${t.note ? ` ${t.note}` : ""}`)
+    .map((t, i) => (sel && !sel.terms.has(t.id) ? "" : `[TERM-${i + 1}] Use "${t.preferred}". Never: ${t.banned.map((b) => `"${b}"`).join(", ")}.${t.note ? ` ${t.note}` : ""}`))
+    .filter(Boolean)
     .join("\n");
   const facts = kit.facts
+    .filter((f) => !sel || sel.facts.has(f.id))
     .map((f) => {
       const expired = f.valid_until && f.valid_until < today;
       const validity = f.valid_until ? (expired ? ` (EXPIRED on ${f.valid_until} — must not be presented as current)` : ` (valid until ${f.valid_until})`) : "";
@@ -221,7 +225,7 @@ export async function aiCheck(
   kit: BrandKit,
   today: string,
 ): Promise<AiCheckOutput> {
-  const prompt = `${kitAsPrompt(kit, today)}
+  const prompt = `${kitAsPrompt(kit, today, selectKit(kit, `${meta.title}\n${meta.purpose}\n${content}`))}
 
 CONTENT DETAILS
 Title: ${meta.title}
