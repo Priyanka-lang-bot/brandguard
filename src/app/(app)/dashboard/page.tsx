@@ -36,7 +36,7 @@ export default async function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-mute">Lumio workspace</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome, {profile.full_name.split(" ")[0]}</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Welcome, {profile.full_name.split(" ")[0]}</h1>
         </div>
         {profile.role !== "reviewer" && (
           <Link href="/drafts/new" className="btn-primary">
@@ -87,11 +87,11 @@ function GuideCard({ role, hasQueue }: { role: string; hasQueue: boolean }) {
         ? [
             "Open the Brand Kit to see the rules, terms and facts every check is grounded in.",
             "Add a rule or fact — the next check uses it immediately.",
-            "Import a guideline PDF: each extracted rule waits for your approval.",
-            "Admins can also review drafts written by others.",
+            "Open Insights to find the most-broken and most-disputed rules, and edit a rule in one click.",
+            "Set the palette, logos and Confidential Terms under Brand Kit → Visual identity / Confidential.",
           ]
         : [
-            "Click New draft, or open the Welcome email draft below — it already has findings.",
+            "Open the Welcome email or the Exam season poster below (both already have findings), or click New draft.",
             "For each finding: accept the fix, edit it, or dispute it with a reason.",
             "Send for review when nothing is left open.",
             "Switch to Reviewer (top right) to approve it.",

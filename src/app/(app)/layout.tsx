@@ -19,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <NavLink href="/dashboard">Dashboard</NavLink>
             {profile.role !== "reviewer" && <NavLink href="/drafts/new">New draft</NavLink>}
             <NavLink href="/brand-kit">Brand Kit</NavLink>
+            {profile.role === "admin" && <NavLink href="/insights">Insights</NavLink>}
           </nav>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {isDemo ? (

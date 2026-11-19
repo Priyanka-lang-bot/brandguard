@@ -8,6 +8,7 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
   const active =
     path === href ||
     (href === "/brand-kit" && path.startsWith("/brand-kit")) ||
+    (href === "/insights" && path.startsWith("/insights")) ||
     (href === "/dashboard" && path.startsWith("/drafts/") && path !== "/drafts/new");
   return (
     <Link
