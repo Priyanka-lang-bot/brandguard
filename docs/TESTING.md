@@ -12,6 +12,7 @@ All results below were produced on 2026-11-19 and 2026-11-20 from the final-roun
 | Migrations + RLS (Postgres 16) | `npm run test:sql` | **Passed** (both migrations apply in single transactions) |
 | Production build | `npm run build` | Passed (13 routes) |
 | End-to-end judge journey | `bash tests/e2e/run.sh` | **49 / 49 checks passed** |
+| Robustness (bad input, refresh, double actions, broken URLs, permissions, empty states) | `BASE=… python3 tests/e2e/robustness.py` | **18 / 18 checks passed** |
 | Scroll-driven product demo | `BASE=… python3 tests/e2e/scroll_demo.py` | **37 / 37 checks passed** (3 desktop sizes; phone, tablet, short laptop; reduced motion) |
 | Accuracy (rules only) | `npm run eval` | Precision 100.0%, recall 70.3% |
 | Image accuracy (measurement mode) | `npm run eval:images` | 46 / 46 planted problems caught, 0 false positives (24 images) |

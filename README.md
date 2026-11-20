@@ -9,7 +9,7 @@ or asks for changes. Admins get an insights dashboard that shows which rules bre
 Built for the CodeNova / We Code Coders hackathon (problem statement by Inkloom AI) by team **404** (solo: Priyanka Wanjari).
 
 - **Live app:** https://brandguard-5siy.vercel.app (public landing page at `/`, sign-in at `/login`)
-- **Final-round documents:** [`docs/`](docs/), including the product report PDF ([`docs/BrandGuard_Final_Report.pdf`](docs/BrandGuard_Final_Report.pdf))
+- **Final-round documents:** [`docs/`](docs/), including the product report PDF ([`docs/BrandGuard_Final_Report.pdf`](docs/BrandGuard_Final_Report.pdf)). Submission checklist: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)
 
 ## Try it
 
@@ -119,7 +119,7 @@ vision mode, which is the honest end-to-end number, runs automatically in CI onc
 | --- | --- |
 | `npm test` | 40 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
 | `npm run test:sql` | Applies both migrations to a local Postgres 15+ and runs the RLS and insights-view tests (workspace isolation, roles, storage folders) |
-| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks) plus the scroll-driven demo (37 checks), against local stand-ins for Supabase and Gemini |
+| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks), robustness checks (18: bad input, refresh, double actions, broken URLs, permissions) and the scroll-driven demo (37), against local stand-ins for Supabase and Gemini |
 | `npm run eval` | Text accuracy evaluation (see above) |
 | `npm run eval:images` | Image accuracy evaluation (see above) |
 

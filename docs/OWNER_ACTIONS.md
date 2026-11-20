@@ -9,7 +9,7 @@ Pull the bundle you received into your local clone and push:
 
 ```bash
 git checkout main && git pull
-git pull /path/to/brandguard-audit.bundle main
+git pull /path/to/brandguard-final-submission.bundle main
 git push origin main
 ```
 

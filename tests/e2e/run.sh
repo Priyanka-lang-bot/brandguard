@@ -31,3 +31,4 @@ NEXT_PID=$!
 sleep 4
 GEMINI_LOG=/tmp/gemini-requests.jsonl BASE=http://localhost:3100 python3 tests/e2e/journey.py
 BASE=http://localhost:3100 python3 tests/e2e/scroll_demo.py
+BASE=http://localhost:3100 python3 tests/e2e/robustness.py
