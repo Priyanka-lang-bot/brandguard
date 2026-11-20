@@ -2,6 +2,9 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { ConfidentialTab, SchemaNotice, VisualTab } from "./kit-extras";
+import { missingImageRules } from "@/lib/images/findings";
+
+const IMAGE_CHECK_NAME = { palette: "palette", contrast: "text contrast", alt_text: "alt text", logo: "logo" } as const;
 import {
   deleteFact,
   deleteRule,
@@ -112,7 +115,7 @@ export function KitEditor({
       {tab === "rules" && <RulesTab rules={active} isAdmin={isAdmin} run={run} pending={pending} editRuleId={editRuleId} />}
       {tab === "visual" &&
         (schemaReady ? (
-          <VisualTab colors={kit.colors ?? []} logos={kit.logos ?? []} logoUrls={logoUrls} isAdmin={isAdmin} run={run} pending={pending} />
+          <VisualTab colors={kit.colors ?? []} logos={kit.logos ?? []} logoUrls={logoUrls} isAdmin={isAdmin} run={run} pending={pending} minContrast={kit.minContrast ?? 4.5} missingRules={missingImageRules(kit).map((k) => IMAGE_CHECK_NAME[k])} />
         ) : (
           <SchemaNotice />
         ))}

@@ -20,13 +20,14 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 export async function loadKit(supabase: Client, includeInactive = false): Promise<BrandKit> {
   let rulesQ = supabase.from("guideline_rules").select("*").order("category").order("code");
   if (!includeInactive) rulesQ = rulesQ.eq("status", "active");
-  const [rules, terms, facts, confidential, colors, logos] = await Promise.all([
+  const [rules, terms, facts, confidential, colors, logos, settings] = await Promise.all([
     rulesQ,
     supabase.from("terms").select("*").order("created_at").order("id"),
     supabase.from("facts").select("*").order("code"),
     supabase.from("confidential_terms").select("id, term, kind, note").order("created_at"),
     supabase.from("brand_colors").select("id, name, hex").order("created_at"),
     supabase.from("brand_logos").select("id, name, version, storage_path, is_current").order("created_at"),
+    supabase.from("workspace_settings").select("*").maybeSingle(),
   ]);
   return {
     rules: rules.data ?? [],
@@ -35,6 +36,8 @@ export async function loadKit(supabase: Client, includeInactive = false): Promis
     confidential: confidential.error ? [] : (confidential.data ?? []),
     colors: colors.error ? [] : (colors.data ?? []),
     logos: logos.error ? [] : (logos.data ?? []),
+    // min_contrast arrives with migration 0003; until then the default (4.5:1) applies.
+    minContrast: Number((settings.data as { min_contrast?: number } | null)?.min_contrast ?? 4.5),
   };
 }
 

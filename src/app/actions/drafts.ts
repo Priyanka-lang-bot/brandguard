@@ -159,9 +159,8 @@ export async function createDraft(_: unknown, formData: FormData) {
 
   try {
     const kit = await loadKit(supabase);
-    for (const u of uploads) {
-      await attachImage(supabase, { workspaceId: profile.workspace_id, draftId: draft.id, userId: user.id, kit }, u);
-    }
+    // Images are analysed in parallel so several images cost one vision round-trip, not several.
+    await Promise.all(uploads.map((u) => attachImage(supabase, { workspaceId: profile.workspace_id, draftId: draft.id, userId: user.id, kit }, u)));
     if (uploads.length) await logEvent(supabase, draft.id, user.id, "image_added", uploads.map((u) => u.name).join(", "), 1);
     await addCheckedVersion(supabase, user.id, draft as Draft, content, sourceFile ? `Imported from ${sourceFile}` : "First draft", null, sourceFile, kit);
   } catch (e) {
@@ -356,7 +355,7 @@ export async function addImage(draftId: string, formData: FormData) {
     const existing = await loadDraftImages(supabase, draft.id);
     if (existing.length + uploads.length > MAX_IMAGES_PER_DRAFT) return { error: `A draft can have at most ${MAX_IMAGES_PER_DRAFT} images.` };
     const kit = await loadKit(supabase);
-    for (const u of uploads) await attachImage(supabase, { workspaceId: draft.workspace_id, draftId: draft.id, userId: user.id, kit }, u);
+    await Promise.all(uploads.map((u) => attachImage(supabase, { workspaceId: draft.workspace_id, draftId: draft.id, userId: user.id, kit }, u)));
     await logEvent(supabase, draft.id, user.id, "image_added", uploads.map((u) => u.name).join(", "));
     return await recheckWithNote(draftId, undefined, `Added ${uploads.map((u) => u.name).join(", ")}`);
   } catch (e) {

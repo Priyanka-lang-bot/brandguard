@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { deleteColor, deleteConfidential, deleteLogo, saveColor, saveConfidential, setLogoCurrent, uploadLogo } from "@/app/actions/kit";
+import { deleteColor, deleteConfidential, deleteLogo, saveColor, saveConfidential, saveMinContrast, setLogoCurrent, uploadLogo } from "@/app/actions/kit";
 import type { BrandColor, BrandLogo, ConfidentialEntry } from "@/lib/types";
 
 type Result = { ok?: boolean; error?: string } | undefined;
@@ -29,6 +29,8 @@ export function VisualTab({
   isAdmin,
   run,
   pending,
+  minContrast,
+  missingRules,
 }: {
   colors: BrandColor[];
   logos: BrandLogo[];
@@ -36,10 +38,39 @@ export function VisualTab({
   isAdmin: boolean;
   run: RunFn;
   pending: boolean;
+  minContrast: number;
+  missingRules: string[];
 }) {
   const [c, setC] = useState({ name: "", hex: "#" });
+  const [mc, setMc] = useState(String(minContrast));
   return (
     <div className="grid gap-6">
+      {missingRules.length > 0 && (
+        <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
+          Image checks switched off because no active Brand Kit rule drives them: <strong>{missingRules.join(", ")}</strong>. Every image finding
+          must cite a rule. Reset the demo data, or ask an admin to add a rule for each check.
+        </p>
+      )}
+      <section>
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-mute">Minimum text contrast</h2>
+        <p className="mb-3 text-sm text-mute">
+          Text inside images must reach this contrast ratio, and never less than WCAG 2.2 AA (4.5:1 for normal text, 3:1 for large text).
+          The default is 4.5:1.
+        </p>
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => saveMinContrast(Number(mc)));
+          }}
+        >
+          <div>
+            <label className="label" htmlFor="min-contrast">Ratio (x : 1)</label>
+            <input id="min-contrast" type="number" min={3} max={21} step={0.1} className="input w-32" value={mc} disabled={!isAdmin} onChange={(e) => setMc(e.target.value)} />
+          </div>
+          {isAdmin && <button className="btn-secondary" disabled={pending}>Save</button>}
+        </form>
+      </section>
       <section>
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-mute">Palette</h2>
         <p className="mb-3 text-sm text-mute">

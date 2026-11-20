@@ -1,0 +1,56 @@
+{
+ "mode": "measurement",
+ "executed_at": "2026-11-20T06:25:39.811Z",
+ "images": 24,
+ "with_problems": 20,
+ "planted": 46,
+ "caught": 46,
+ "missed": 0,
+ "false_positives": 0,
+ "catch_rate": 1,
+ "precision": 1,
+ "meets_85_percent": true,
+ "by_issue": {
+  "alt_text": {
+   "tp": 9,
+   "fn": 0,
+   "fp": 0
+  },
+  "contrast": {
+   "tp": 7,
+   "fn": 0,
+   "fp": 0
+  },
+  "image_text": {
+   "tp": 9,
+   "fn": 0,
+   "fp": 0
+  },
+  "logo_missing": {
+   "tp": 4,
+   "fn": 0,
+   "fp": 0
+  },
+  "logo_recoloured": {
+   "tp": 3,
+   "fn": 0,
+   "fp": 0
+  },
+  "logo_retired": {
+   "tp": 3,
+   "fn": 0,
+   "fp": 0
+  },
+  "logo_stretched": {
+   "tp": 3,
+   "fn": 0,
+   "fp": 0
+  },
+  "palette": {
+   "tp": 8,
+   "fn": 0,
+   "fp": 0
+  }
+ },
+ "details": []
+}

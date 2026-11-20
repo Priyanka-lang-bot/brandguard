@@ -2,7 +2,7 @@ import "server-only";
 import { aiAvailable, friendlyAiError } from "../engine/gemini";
 import { runCheck, type CheckCache } from "../engine";
 import type { BrandKit, BrandLogo, Candidate } from "../types";
-import { inspectImage, measurePalette, measureRegionContrast, thumbnail } from "./analyze";
+import { inspectImage, measureLogo, measurePalette, measureRegionContrast, thumbnail } from "./analyze";
 import { imageFindings, tagImageTextFindings, type ImageAnalysis, type ImageRecord } from "./findings";
 import { analyzeWithVision } from "./vision";
 
@@ -44,6 +44,11 @@ export async function analyzeImage(
     analysis.logo = vision.logo;
     const measured = await Promise.all(vision.textBlocks.map((b) => measureRegionContrast(buf, b.box, b.text, width, height)));
     analysis.contrast = measured.filter((m): m is NonNullable<typeof m> => m !== null);
+    // Logo proportions and colour are measured against the matched reference file.
+    const ref = vision.logo.present && vision.logo.box ? opts.logos.find((l) => l.logo.id === vision.logo.matchedLogoId) : undefined;
+    if (ref && vision.logo.box) {
+      analysis.logo = { ...vision.logo, measured: await measureLogo(buf, vision.logo.box, width, height, ref.data).catch(() => null) };
+    }
   } catch (e) {
     analysis.ai.error = friendlyAiError(e instanceof Error ? e.message : String(e));
     console.error(`Image vision check failed: ${analysis.ai.error}`);

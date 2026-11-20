@@ -1,0 +1,248 @@
+{
+ "palette": [
+  {
+   "name": "Indigo",
+   "hex": "#5568F2"
+  },
+  {
+   "name": "Ink",
+   "hex": "#0F172A"
+  },
+  {
+   "name": "Sunbeam",
+   "hex": "#FFE14D"
+  },
+  {
+   "name": "Cloud",
+   "hex": "#F1F5F9"
+  }
+ ],
+ "logos": [
+  {
+   "id": "logo:current",
+   "name": "Lumio shield",
+   "version": "2026",
+   "storage_path": "x",
+   "is_current": true
+  },
+  {
+   "id": "logo:retired",
+   "name": "Lumio badge",
+   "version": "2023 (retired)",
+   "storage_path": "y",
+   "is_current": false
+  }
+ ],
+ "images": [
+  {
+   "id": "img01",
+   "alt": "",
+   "logo": "none",
+   "expected": [
+    "image_text",
+    "contrast",
+    "palette",
+    "logo_missing",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img02",
+   "alt": "poster",
+   "logo": "current",
+   "expected": [
+    "image_text",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img03",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": [
+    "contrast",
+    "palette"
+   ]
+  },
+  {
+   "id": "img04",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "retired",
+   "expected": [
+    "logo_retired"
+   ]
+  },
+  {
+   "id": "img05",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "stretched",
+   "expected": [
+    "logo_stretched"
+   ]
+  },
+  {
+   "id": "img06",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "recoloured",
+   "expected": [
+    "logo_recoloured"
+   ]
+  },
+  {
+   "id": "img07",
+   "alt": "",
+   "logo": "current",
+   "expected": [
+    "image_text",
+    "contrast",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img08",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "none",
+   "expected": [
+    "image_text",
+    "palette",
+    "logo_missing"
+   ]
+  },
+  {
+   "id": "img09",
+   "alt": "IMG_2041.png",
+   "logo": "retired",
+   "expected": [
+    "image_text",
+    "logo_retired",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img10",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "stretched",
+   "expected": [
+    "contrast",
+    "logo_stretched"
+   ]
+  },
+  {
+   "id": "img11",
+   "alt": "banner",
+   "logo": "recoloured",
+   "expected": [
+    "palette",
+    "logo_recoloured",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img12",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": [
+    "image_text"
+   ]
+  },
+  {
+   "id": "img13",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": [
+    "contrast",
+    "palette"
+   ]
+  },
+  {
+   "id": "img14",
+   "alt": "",
+   "logo": "none",
+   "expected": [
+    "logo_missing",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img15",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "stretched",
+   "expected": [
+    "image_text",
+    "palette",
+    "logo_stretched"
+   ]
+  },
+  {
+   "id": "img16",
+   "alt": "image",
+   "logo": "retired",
+   "expected": [
+    "contrast",
+    "logo_retired",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img17",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "recoloured",
+   "expected": [
+    "palette",
+    "logo_recoloured"
+   ]
+  },
+  {
+   "id": "img18",
+   "alt": "",
+   "logo": "current",
+   "expected": [
+    "image_text",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img19",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "none",
+   "expected": [
+    "contrast",
+    "logo_missing"
+   ]
+  },
+  {
+   "id": "img20",
+   "alt": "poster",
+   "logo": "current",
+   "expected": [
+    "image_text",
+    "palette",
+    "alt_text"
+   ]
+  },
+  {
+   "id": "img21",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": []
+  },
+  {
+   "id": "img22",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": []
+  },
+  {
+   "id": "img23",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": []
+  },
+  {
+   "id": "img24",
+   "alt": "Lumio poster with a study tip headline, a short subline and the Lumio shield",
+   "logo": "current",
+   "expected": []
+  }
+ ]
+}

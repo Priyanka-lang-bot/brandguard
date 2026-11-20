@@ -31,15 +31,19 @@ Open the live link and click **Get started**, then pick a demo role. The demo br
 2. **Confidentiality masking.** Before any AI request is built, emails, phone numbers, Confidential Terms, unreleased product names and
    admin-defined patterns are replaced with per-request placeholders such as `[[EMAIL_1_k3f9q2]]`. A final check refuses to send any
    request that still contains a protected value.
-3. **AI check (Gemini, structured JSON).** The model receives the active Brand Kit with citable codes (`TONE-1`, `TERM-3`, `FACT-4` …),
+3. **AI check (Gemini, structured JSON).** If the main model is slow or overloaded, the fallback model takes over within a 28-second
+   budget, and if both fail, the rule checks are still returned with the reason. The model receives the active Brand Kit with citable codes (`TONE-1`, `TERM-3`, `FACT-4` …),
    the creator's stated purpose and the masked draft. Expired facts are marked as expired. Large kits are narrowed to the most relevant
    entries first.
 4. **Grounding gate.** Every AI finding is discarded unless it cites a real Brand Kit code *and* its quote is found in the draft.
    Suggestions identical to the original are dropped. Placeholders are restored before this check, so quotes are matched against the
    real draft.
 5. **Images.** `sharp` measures dominant colours (k-means in CIELAB) and compares them with the palette (CIEDE2000). Gemini vision
-   returns text regions, an alt-text suggestion and a logo match against the Brand Kit logo files. `sharp` then measures WCAG 2.2
-   contrast on each text region, and the text in the image goes through steps 1–4.
+   returns text regions, an alt-text suggestion, and the match and position of a Brand Kit logo. `sharp` then measures:
+   - WCAG 2.2 contrast on each text region, against the brand minimum (default 4.5:1);
+   - the logo's proportions and colour against its reference file, to detect stretching and recolouring.
+
+   The text found in the image goes through steps 1–4. Every image finding cites the Brand Kit rule that drives it.
 6. **Merge, cache, record.** Duplicate findings are merged. The AI result is cached by content + Brand Kit version + date. Resolutions
    are applied as a new **version**, and disputes carry over when a re-check flags the same words for the same source.
 
@@ -65,6 +69,21 @@ How to read this:
   repository has a `GEMINI_API_KEY` secret. Locally: `GEMINI_API_KEY=… npm run eval`. Per-category results are written to
   [`eval/results/`](eval/results/).
 
+### Image checks (Round 2 target: catch ≥ 85% of planted problems in a 20-image test set)
+
+[`eval/images/`](eval/images/) holds 24 generated posters: 20 with 46 planted problems, plus 4 clean ones. The planted problems are
+off-palette colours, low-contrast text, missing or weak alt text, banned terms in the image, and missing, retired, stretched or
+recoloured logos. Run `npm run eval:images`. Results from 2026-11-20:
+
+| Mode | Planted | Caught | Missed | False positives | Catch rate | ≥ 85%? |
+|---|---|---|---|---|---|---|
+| Measurement (text and logo positions taken from each image's design) | 46 | 46 | 0 | 0 | **100.0%** | yes |
+| Vision (Gemini supplies text and logo positions) | **not executed**: no `GEMINI_API_KEY` where this was run | | | | | |
+
+The measurement mode scores BrandGuard's own colour, contrast, alt-text, logo and text-rule logic, assuming perception is perfect. It
+does **not** score the vision model. The images are synthetic and were made by the same team, so 100% here is an upper bound. The
+vision mode, which is the honest end-to-end number, runs automatically in CI once the `GEMINI_API_KEY` secret is set.
+
 ## Stack
 
 - Next.js 15 (App Router, Server Actions), React 19, TypeScript, Tailwind CSS v4, self-hosted fonts (Fontsource: Archivo, Instrument Serif)
@@ -75,7 +94,8 @@ How to read this:
 
 ## Run your own copy
 
-1. Create a Supabase project. In **SQL Editor**, run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_final_round.sql`.
+1. Create a Supabase project. In **SQL Editor**, run `supabase/migrations/0001_init.sql`, then `0002_final_round.sql`, then
+   `0003_brand_contrast.sql` (the brand minimum contrast setting).
    0002 is additive. It adds image, palette, logo, confidential-term, settings and cache tables, two private storage buckets, and the
    insights views. The app keeps working without 0002, but those features show a "needs the database update" notice.
 2. Set environment variables (Vercel → Project → Settings → Environment Variables, or `.env.local`):
@@ -97,19 +117,21 @@ How to read this:
 
 | Command | What it runs |
 | --- | --- |
-| `npm test` | 33 unit and integration tests: check engine, masking on every AI call path (captured request payloads), image analysis incl. the poster acceptance test, insights maths, Brand Kit retrieval |
+| `npm test` | 40 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
 | `npm run test:sql` | Applies both migrations to a local Postgres 15+ and runs the RLS and insights-view tests (workspace isolation, roles, storage folders) |
-| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks) against local stand-ins for Supabase and Gemini |
-| `npm run eval` | Accuracy evaluation (see above) |
+| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks) plus the scroll-driven demo (37 checks), against local stand-ins for Supabase and Gemini |
+| `npm run eval` | Text accuracy evaluation (see above) |
+| `npm run eval:images` | Image accuracy evaluation (see above) |
 
 How to run them and the latest results: [`docs/TESTING.md`](docs/TESTING.md). CI (`.github/workflows/ci.yml`) runs all of them.
 
 ## Known limitations
 
 - Masking covers text. Image pixels go to the vision model as they are.
-- Contrast is measured only on text regions reported by the vision model. Without the AI, palette and alt-text checks still run but
-  contrast, in-image text and logo checks do not.
-- "Large text" for WCAG is estimated from the text-region height at the image's intrinsic size.
+- Contrast, in-image text and logo checks need the vision model to locate text and the logo. Without the AI, palette and alt-text
+  checks still run. Logo stretch and recolour are then measured by BrandGuard against the reference file, not judged by the model.
+- Image checks only run when the Brand Kit has a rule for them (`check_key`), because every image finding must cite a rule.
+- "Large text" for WCAG is estimated from the text-region height. The brand minimum (default 4.5:1) applies to all text in images.
 - pgvector retrieval is not implemented. Large kits use lexical selection (see [`docs/ROADMAP.md`](docs/ROADMAP.md)).
 
 ## Disclosures

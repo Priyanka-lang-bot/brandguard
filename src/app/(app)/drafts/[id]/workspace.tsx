@@ -29,6 +29,8 @@ interface Props {
   images: DraftImageView[];
   imagesEnabled: boolean;
   palette: BrandColor[];
+  minContrast: number;
+  missingRules: string[];
   canEdit: boolean;
   canReview: boolean;
   isAuthor: boolean;
@@ -323,6 +325,8 @@ function FindingsTab(
         images={p.images}
         findings={findings}
         palette={p.palette}
+        minContrast={p.minContrast}
+        missingRules={p.missingRules}
         editable={interactive || needsEdit}
         draftId={p.draft.id}
         run={run}

@@ -323,3 +323,15 @@ function schemaHint(msg: string) {
     ? "This feature needs the database update in supabase/migrations/0002_final_round.sql. Ask the workspace owner to run it."
     : msg;
 }
+
+/** Brand minimum contrast for text in images (3–21, default 4.5). */
+export async function saveMinContrast(value: number) {
+  return wrap(async () => {
+    const { supabase, profile } = await requireAdmin();
+    if (!Number.isFinite(value) || value < 3 || value > 21) throw new Error("Enter a ratio between 3 and 21.");
+    const { error } = await supabase
+      .from("workspace_settings")
+      .upsert({ workspace_id: profile.workspace_id, min_contrast: Math.round(value * 100) / 100, updated_at: new Date().toISOString() });
+    if (error) throw new Error(/min_contrast|schema cache|does not exist/i.test(error.message) ? "This setting needs supabase/migrations/0003_brand_contrast.sql. Ask the workspace owner to run it." : error.message);
+  })();
+}

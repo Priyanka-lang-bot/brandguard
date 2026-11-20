@@ -7,4 +7,5 @@ psql -q -v ON_ERROR_STOP=1 -d postgres -c "drop database if exists $DB" -c "crea
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f tests/sql/supabase_stub.sql
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0001_init.sql
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0002_final_round.sql
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0003_brand_contrast.sql
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f tests/sql/rls_test.sql

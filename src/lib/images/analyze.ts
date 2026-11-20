@@ -180,3 +180,35 @@ export async function thumbnail(buf: Buffer, size = 384): Promise<Buffer> {
 }
 
 export { hexToRgb };
+
+export interface LogoMeasurement {
+  aspect: number; // width / height of the mark in the image
+  refAspect: number; // width / height of the reference logo (transparent/white margins trimmed)
+  stretch: number; // aspect / refAspect (1 = correct proportions)
+  color: string | null; // dominant non-neutral colour of the mark in the image
+  refColor: string | null; // dominant non-neutral colour of the reference logo
+  deltaE: number | null; // CIEDE2000 between the two
+}
+
+
+async function dominantNonNeutral(buf: Buffer): Promise<string | null> {
+  const { isNeutral } = await import("./color");
+  const pal = await measurePalette(buf, 6);
+  return pal.find((c) => !isNeutral(c.hex) && c.share >= 0.05)?.hex ?? null;
+}
+
+/** Measure a logo region against the reference logo file: proportions and colour. */
+export async function measureLogo(buf: Buffer, box: Box, imgW: number, imgH: number, reference: Buffer): Promise<LogoMeasurement | null> {
+  const left = Math.max(0, Math.floor(box.x * imgW));
+  const top = Math.max(0, Math.floor(box.y * imgH));
+  const width = Math.min(imgW - left, Math.ceil(box.w * imgW));
+  const height = Math.min(imgH - top, Math.ceil(box.h * imgH));
+  if (width < 8 || height < 8) return null;
+  const region = await sharp(buf, { limitInputPixels: MAX_IMAGE_PIXELS }).extract({ left, top, width, height }).png().toBuffer();
+  const ref = await sharp(reference, { limitInputPixels: MAX_IMAGE_PIXELS }).flatten({ background: "#ffffff" }).trim({ threshold: 12 }).png().toBuffer({ resolveWithObject: true });
+  const refAspect = ref.info.width / ref.info.height;
+  const aspect = width / height;
+  const [color, refColor] = await Promise.all([dominantNonNeutral(region), dominantNonNeutral(ref.data)]);
+  const deltaE = color && refColor ? Math.round(deltaE2000(rgbToLab(hexToRgb(color)), rgbToLab(hexToRgb(refColor))) * 10) / 10 : null;
+  return { aspect: Math.round(aspect * 1000) / 1000, refAspect: Math.round(refAspect * 1000) / 1000, stretch: Math.round((aspect / refAspect) * 1000) / 1000, color, refColor, deltaE };
+}

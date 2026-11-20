@@ -19,7 +19,6 @@ export const aiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 export function lowThinking(model: string): Record<string, unknown> {
   return /gemini-[3-9]/.test(model) ? { thinkingLevel: process.env.GEMINI_THINKING || "low" } : { thinkingBudget: 0 };
 }
-const NO_THINKING = lowThinking(MODEL);
 
 async function requestGemini(body: object, key: string, signal: AbortSignal, model = MODEL) {
   return fetch(ENDPOINT(model), {
@@ -32,52 +31,60 @@ async function requestGemini(body: object, key: string, signal: AbortSignal, mod
 
 export type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
 
+/**
+ * One structured Gemini call with a total time budget.
+ * The main model gets ~55% of the budget; if it times out, is overloaded (429/5xx) or returns an unusable answer,
+ * the fallback model gets the rest. A hung primary therefore no longer uses up the whole budget.
+ */
 export async function callGemini(system: string, user: string | GeminiPart[], schema: object, timeoutMs = 40000): Promise<unknown> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not set");
-  const ctrl = new AbortController();
   const started = Date.now();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const base = {
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: "user", parts: typeof user === "string" ? [{ text: user }] : user }],
   };
   const config = { temperature: 0.1, responseMimeType: "application/json", responseSchema: schema };
-  try {
-    let res = await requestGemini({ ...base, generationConfig: { ...config, thinkingConfig: NO_THINKING } }, key, ctrl.signal);
-    // Some models reject a zero thinking budget; retry once with the model's default.
-    if (res.status === 400) {
-      const body = await res.text();
-      if (!/thinking/i.test(body)) throw new Error(`Gemini 400: ${body.slice(0, 300)}`);
-      res = await requestGemini({ ...base, generationConfig: config }, key, ctrl.signal);
-    }
-    // On a transient overload, retry once on the fallback model while there is time left.
-    if ((res.status === 429 || res.status >= 500) && Date.now() - started < timeoutMs / 2 && FALLBACK_MODEL !== MODEL) {
-      await new Promise((r) => setTimeout(r, 800));
-      res = await requestGemini(
-        { ...base, generationConfig: { ...config, thinkingConfig: lowThinking(FALLBACK_MODEL) } },
-        key,
-        ctrl.signal,
-        FALLBACK_MODEL,
-      );
-    }
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Gemini ${res.status}: ${body.slice(0, 300)}`);
-    }
-    const data = await res.json();
-    const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-    if (!text) throw new Error(`Gemini returned no content (${data?.candidates?.[0]?.finishReason ?? "no candidates"})`);
+
+  const attempt = async (model: string, budgetMs: number): Promise<unknown> => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), Math.max(1000, budgetMs));
     try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error("Gemini returned malformed JSON");
+      let res = await requestGemini({ ...base, generationConfig: { ...config, thinkingConfig: lowThinking(model) } }, key, ctrl.signal, model);
+      // Some models reject the thinking setting; retry once with the model's default.
+      if (res.status === 400) {
+        const body = await res.text();
+        if (!/thinking/i.test(body)) throw new Error(`Gemini 400: ${body.slice(0, 300)}`);
+        res = await requestGemini({ ...base, generationConfig: config }, key, ctrl.signal, model);
+      }
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Gemini ${res.status}: ${body.slice(0, 300)}`);
+      }
+      const data = await res.json();
+      const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
+      if (!text) throw new Error(`Gemini returned no content (${data?.candidates?.[0]?.finishReason ?? "no candidates"})`);
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error("Gemini returned malformed JSON");
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error(`Gemini timed out after ${Math.round(budgetMs / 1000)}s (${model})`);
+      throw e;
+    } finally {
+      clearTimeout(timer);
     }
+  };
+
+  const retryable = (e: unknown) => e instanceof Error && /timed out|Gemini (429|5\d\d)|no content|malformed/.test(e.message);
+  const primaryBudget = FALLBACK_MODEL !== MODEL ? Math.round(timeoutMs * 0.55) : timeoutMs;
+  try {
+    return await attempt(MODEL, primaryBudget);
   } catch (e) {
-    if (e instanceof Error && e.name === "AbortError") throw new Error(`Gemini timed out after ${Math.round(timeoutMs / 1000)}s`);
-    throw e;
-  } finally {
-    clearTimeout(timer);
+    const left = timeoutMs - (Date.now() - started);
+    if (FALLBACK_MODEL === MODEL || !retryable(e) || left < 4000) throw e;
+    return await attempt(FALLBACK_MODEL, left);
   }
 }
 
@@ -240,7 +247,7 @@ DRAFT>>>`;
   const masker = createMasker(maskConfigFromKit(kit), [prompt]);
   const user = masker.mask(prompt);
   masker.assertClean(user);
-  const out = (await callGemini(CHECK_SYSTEM, user, CHECK_SCHEMA)) as { findings?: RawAiFinding[] };
+  const out = (await callGemini(CHECK_SYSTEM, user, CHECK_SCHEMA, 28000)) as { findings?: RawAiFinding[] };
   const findings = Array.isArray(out?.findings) ? out.findings.map((f) => restoreFinding(f, masker)) : [];
   return { findings, masked: masker.counts() };
 }

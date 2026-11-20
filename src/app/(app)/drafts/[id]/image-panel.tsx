@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { addImage, removeImage } from "@/app/actions/drafts";
 import { cx } from "@/components/ui";
 import { isNeutral, nearestColor } from "@/lib/images/color";
-import { MIN_COLOR_SHARE, OFF_PALETTE_DELTA_E, type ImageAnalysis } from "@/lib/images/findings";
+import { MIN_COLOR_SHARE, OFF_PALETTE_DELTA_E, requiredContrast, type ImageAnalysis } from "@/lib/images/findings";
 import type { BrandColor, Finding } from "@/lib/types";
 
 export interface DraftImageView {
@@ -29,7 +29,11 @@ export function ImagePanels({
   pending,
   onPickFinding,
   enabled,
+  minContrast = 4.5,
+  missingRules = [],
 }: {
+  minContrast?: number;
+  missingRules?: string[];
   images: DraftImageView[];
   findings: Finding[];
   palette: BrandColor[];
@@ -44,12 +48,18 @@ export function ImagePanels({
   if (!images.length && !editable) return null;
   return (
     <section className="grid gap-4" aria-label="Images">
+      {images.length > 0 && missingRules.length > 0 && (
+        <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-900">
+          Not checked, because the Brand Kit has no rule for it: {missingRules.join(", ")}.
+        </p>
+      )}
       {images.map((img) => (
         <ImagePanel
           key={img.id}
           img={img}
           findings={findings.filter((f) => f.image_id === img.id)}
           palette={palette}
+          minContrast={minContrast}
           editable={editable}
           run={run}
           pending={pending}
@@ -65,6 +75,7 @@ function ImagePanel({
   img,
   findings,
   palette,
+  minContrast,
   editable,
   run,
   pending,
@@ -73,12 +84,14 @@ function ImagePanel({
   img: DraftImageView;
   findings: Finding[];
   palette: BrandColor[];
+  minContrast: number;
   editable: boolean;
   run: Run;
   pending: boolean;
   onPickFinding: (id: string) => void;
 }) {
   const a = img.analysis;
+  const need = (large: boolean) => requiredContrast(large, { minContrast });
   const [showText, setShowText] = useState(false);
   const open = findings.filter((f) => f.status === "open").length;
   return (
@@ -111,13 +124,13 @@ function ImagePanel({
             <div className="grid aspect-video place-items-center text-sm text-mute">Preview unavailable</div>
           )}
           {a?.contrast.map((c, i) => {
-            const fail = c.ratio < c.required;
+            const fail = c.ratio < need(c.large);
             return (
               <span
                 key={i}
                 className={cx("absolute rounded-sm border-2", fail ? "border-red-500 bg-red-500/10" : "border-emerald-400/70")}
                 style={{ left: `${c.box.x * 100}%`, top: `${c.box.y * 100}%`, width: `${c.box.w * 100}%`, height: `${c.box.h * 100}%` }}
-                title={`${c.ratio.toFixed(2)}:1 (needs ${c.required}:1)`}
+                title={`${c.ratio.toFixed(2)}:1 (needs ${need(c.large)}:1)`}
               >
                 <span className={cx("absolute -top-5 left-0 rounded px-1 text-[10px] font-bold text-white", fail ? "bg-red-600" : "bg-emerald-600")}>
                   {c.ratio.toFixed(1)}:1
@@ -165,11 +178,11 @@ function ImagePanel({
               <ul className="mt-2 grid gap-1">
                 {a.contrast.map((c, i) => (
                   <li key={i} className="flex items-baseline gap-2 text-xs">
-                    <span className={cx("w-14 shrink-0 font-semibold tabular-nums", c.ratio < c.required ? "text-red-700" : "text-emerald-800")}>
+                    <span className={cx("w-14 shrink-0 font-semibold tabular-nums", c.ratio < need(c.large) ? "text-red-700" : "text-emerald-800")}>
                       {c.ratio.toFixed(2)}:1
                     </span>
                     <span className="truncate text-soft">{c.text.replace(/\n/g, " ")}</span>
-                    <span className="ml-auto shrink-0 text-dim">needs {c.required}:1</span>
+                    <span className="ml-auto shrink-0 text-dim">needs {need(c.large)}:1</span>
                   </li>
                 ))}
               </ul>
@@ -180,6 +193,7 @@ function ImagePanel({
             <p className="text-xs text-mute">
               <strong className="text-soft">Logo:</strong>{" "}
               {!a.logo.checked ? "no logos in the Brand Kit to compare against" : a.logo.present ? `Brand Kit logo found (${a.logo.confidence} confidence)` : "no Brand Kit logo found"}
+              {a.logo.measured && ` · proportions ${a.logo.measured.stretch.toFixed(2)}× the original${a.logo.measured.deltaE !== null ? ` · colour ΔE ${a.logo.measured.deltaE}` : ""}`}
             </p>
           )}
 

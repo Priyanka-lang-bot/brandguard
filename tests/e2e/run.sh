@@ -10,6 +10,7 @@ psql -q -v ON_ERROR_STOP=1 -d postgres -c "drop database if exists $DB" -c "crea
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f tests/sql/supabase_stub.sql
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0001_init.sql
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0002_final_round.sql
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -1 -f supabase/migrations/0003_brand_contrast.sql
 
 cleanup() { kill ${MOCK_PID:-} ${GEM_PID:-} ${NEXT_PID:-} 2>/dev/null || true; }
 trap cleanup EXIT
@@ -29,3 +30,4 @@ npx next start -p 3100 > /tmp/next.log 2>&1 &
 NEXT_PID=$!
 sleep 4
 GEMINI_LOG=/tmp/gemini-requests.jsonl BASE=http://localhost:3100 python3 tests/e2e/journey.py
+BASE=http://localhost:3100 python3 tests/e2e/scroll_demo.py

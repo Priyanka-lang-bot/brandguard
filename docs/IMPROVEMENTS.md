@@ -2,9 +2,21 @@
 
 ## 1. Visual and accessibility checks for images
 
-**Original commitment.** Image upload alongside text; PNG/JPG; Sharp dominant colours vs palette with the nearest brand colour; WCAG
-2.2 AA text contrast with the measured ratio; missing/weak alt text with a Gemini vision suggestion; text inside images run through the
-text checks; logo presence and version against Brand Kit logo assets; everything integrated into findings.
+**Original commitment (Round 2 form, verbatim excerpts).** "Creators can attach images … to a draft … a new 'visual rules' section to the
+Brand Kit (brand colours as hex values, a reference logo, minimum contrast) and a new image findings type that works in the same
+accept / edit / dispute and review flow." Checks: colour via dominant palette and ΔE; "measure WCAG contrast for text placed on the
+image and flag anything below the brand's minimum (default 4.5:1)"; alt text required and checked; logo: "use Gemini vision to check
+whether the logo is used incorrectly (stretched, recoloured, wrong version) compared with the reference logo. As with text, every
+finding must cite a visual rule, or it is discarded." **Done when:** "images can be attached to drafts; colour, contrast, alt-text and
+logo findings appear with citations; and a test set of 20 images with planted problems is caught at 85% or better."
+
+| Done-when item | Status |
+| --- | --- |
+| Images attached to drafts | **Met** (unit + E2E) |
+| Colour, contrast, alt-text and logo findings with citations | **Met.** Each finding cites its `check_key` rule (VIS-1, ACC-4, ACC-2, VIS-2). A check with no rule raises nothing (tested) |
+| Brand minimum contrast (default 4.5:1) | **Met.** Brand Kit → Visual identity setting (migration 0003), never below WCAG AA |
+| Logo stretched / recoloured / wrong version | **Met.** Version from the vision match. Stretch and recolour are *measured* against the reference file (aspect ratio ±20%, ΔE00 > 15), not taken from the model's opinion |
+| 20-image test set caught at ≥ 85% | **Partially verified.** 24 images (20 with 46 planted problems, 4 clean). Measurement mode: 46/46 caught, 0 false positives. **The vision mode (real Gemini) has not been run yet: no API key was available here** |
 
 **What was implemented**
 
@@ -44,8 +56,9 @@ findings all run the production code. The real model's OCR quality was not measu
 file and oversize rejection; behaviour with no AI (palette and alt text only, no contrast claims); E2E upload → findings → accept alt
 text → review.
 
-**Incomplete.** Image pixels are not masked. "Large text" is estimated. Logo matching depends on the vision model (no local template
-matching).
+**Incomplete.** The vision-mode score on the 24-image set needs a Gemini key. Image pixels are not masked. "Large text" is estimated.
+Logo identification (which version) depends on the vision model; stretch and colour are measured locally once the model has located
+the mark.
 
 ## 2. Brand insights dashboard for administrators
 

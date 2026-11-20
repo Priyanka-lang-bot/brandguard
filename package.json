@@ -10,7 +10,8 @@
     "seed": "node --conditions=react-server --import tsx scripts/seed.ts",
     "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
     "test:sql": "bash scripts/test-sql.sh",
-    "eval": "node --conditions=react-server --import tsx scripts/eval.ts"
+    "eval": "node --conditions=react-server --import tsx scripts/eval.ts",
+    "eval:images": "node --conditions=react-server --import tsx scripts/eval-images.ts"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",

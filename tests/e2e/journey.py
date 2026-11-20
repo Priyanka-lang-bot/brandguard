@@ -11,6 +11,14 @@ SHOTS = os.environ.get("SHOTS", "docs/screenshots")
 CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
 results = []
 
+def make_fixtures():
+    """Test files the journey uploads: the demo poster (embedded in the repo) and a real 1x1 GIF (unsupported type)."""
+    import base64
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    src = open(os.path.join(root, "src/lib/demo/embedded.ts")).read()
+    open("/tmp/poster.png", "wb").write(base64.b64decode(re.search(r'DEMO_POSTER_PNG = "(.*?)"', src).group(1)))
+    open("/tmp/bad.gif", "wb").write(base64.b64decode("R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="))
+
 def ok(name, cond, detail=""):
     results.append((name, bool(cond), detail))
     print(("PASS " if cond else "FAIL ") + name + (f" — {detail}" if detail else ""), flush=True)
@@ -20,6 +28,7 @@ async def shot(page, name, full=False):
     await page.screenshot(path=f"{SHOTS}/{name}.png", full_page=full)
 
 async def main():
+    make_fixtures()
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 1440, "height": 900})

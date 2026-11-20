@@ -35,6 +35,10 @@ Status key: **Done** = implemented and tested (unit/SQL/E2E as noted). **Partial
 | Missing/weak alt text with Gemini vision suggestion; accepting it updates the image's alt text | Done | Unit + E2E |
 | Text inside images read by Gemini vision, then normal text checks | Done | Acceptance (vision stubbed), E2E (stub) |
 | Logo presence and version vs uploaded Brand Kit logo files | Done | Unit (current/retired/none) |
+| Logo misuse: stretched / recoloured, measured against the reference file | Done | Unit (measured aspect ratio and ΔE00) + image eval |
+| Brand minimum contrast (default 4.5:1, admin setting) | Done | Unit; needs migration 0003 on the database |
+| Image findings must cite a Brand Kit rule (no rule → no finding) | Done | Unit |
+| 20-image test set with planted problems (target ≥ 85%) | Partial | 24 images, measurement mode 46/46. Vision mode not run (no key) |
 | Brand Kit → Visual identity (palette, logo upload, current/retired) | Done | E2E screenshot |
 | **Improvement 2. Brand insights dashboard** | Done | See [IMPROVEMENTS.md](IMPROVEMENTS.md) |
 | `security_invoker` SQL views + configurable dispute threshold | Done | SQL tests (isolation, de-duplication, flag) |
@@ -49,12 +53,14 @@ Status key: **Done** = implemented and tested (unit/SQL/E2E as noted). **Partial
 | Workspace AI disclosure page `/ai-disclosure` | Done | |
 | Brand Kit retrieval for large kits | Partial | Lexical selection implemented and tested; pgvector deferred |
 | Nested accepted fixes compose instead of blocking submission | Done | Found by E2E, unit-tested |
+| Gemini fallback model also used when the main model times out (found on the live site) | Done | Unit (hung / overloaded / both hung) |
+| Demo sign-in shows progress while signing in | Done | — |
 | Error boundary, 404 page, middleware resilient to auth outage | Done | |
 | CI workflow (lint, types, unit, SQL/RLS, build, eval, E2E) | Done | File present. It runs once the commits are pushed |
 
 ## C. Partially implemented
 
-- **AI accuracy numbers.** The script and CI are ready. The numbers need a `GEMINI_API_KEY`.
+- **AI accuracy numbers.** The scripts and CI are ready for text and images. The numbers need a `GEMINI_API_KEY` secret.
 - **Large-kit retrieval.** Lexical, not pgvector.
 - **WCAG large-text detection.** Estimated from region height.
 

@@ -64,6 +64,8 @@ export interface BrandKit {
   confidential?: ConfidentialEntry[];
   colors?: BrandColor[];
   logos?: BrandLogo[];
+  /** Brand minimum contrast for text in images (workspace setting, default 4.5). */
+  minContrast?: number;
 }
 
 /** A finding produced by the engine, before it is stored. */

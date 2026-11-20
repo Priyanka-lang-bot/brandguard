@@ -5,6 +5,7 @@ import { loadKit, profileMap, requireProfile } from "@/lib/data";
 import type { Draft, DraftVersion, Finding } from "@/lib/types";
 import { DraftWorkspace } from "./workspace";
 import { loadDraftImages, signedImageUrls } from "@/lib/images/store";
+import { missingImageRules } from "@/lib/images/findings";
 import { hasFinalRoundSchema } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +88,8 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
         images={images}
         imagesEnabled={imagesEnabled}
         palette={palette}
+        minContrast={kit.minContrast ?? 4.5}
+        missingRules={missingImageRules(kit).map((k) => k.replace("_", " "))}
         canEdit={canEdit}
         canReview={canReview}
         isAuthor={isAuthor}

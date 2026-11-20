@@ -1,6 +1,6 @@
 # Testing
 
-All results below were produced on 2026-11-19 from the final-round commits. Nothing in this file was estimated.
+All results below were produced on 2026-11-19 and 2026-11-20 from the final-round commits. Nothing in this file was estimated.
 
 ## Results
 
@@ -8,14 +8,16 @@ All results below were produced on 2026-11-19 from the final-round commits. Noth
 | --- | --- | --- |
 | Lint | `npm run lint` | 0 problems (the one Round 2 error was fixed) |
 | Types | `npx tsc --noEmit` | 0 errors |
-| Unit / integration | `npm test` | **33 / 33 passed** |
+| Unit / integration | `npm test` | **40 / 40 passed** |
 | Migrations + RLS (Postgres 16) | `npm run test:sql` | **Passed** (both migrations apply in single transactions) |
 | Production build | `npm run build` | Passed (13 routes) |
 | End-to-end judge journey | `bash tests/e2e/run.sh` | **49 / 49 checks passed** |
 | Scroll-driven product demo | `BASE=… python3 tests/e2e/scroll_demo.py` | **37 / 37 checks passed** (3 desktop sizes; phone, tablet, short laptop; reduced motion) |
 | Accuracy (rules only) | `npm run eval` | Precision 100.0%, recall 70.3% |
+| Image accuracy (measurement mode) | `npm run eval:images` | 46 / 46 planted problems caught, 0 false positives (24 images) |
+| Image accuracy (vision mode) | `GEMINI_API_KEY=… npm run eval:images` | **Not executed: no key available** |
 | Accuracy (rules + Gemini) | `GEMINI_API_KEY=… npm run eval` | **Not executed: no key available** |
-| Live deployment | — | **Not verified for the final-round code**: the new commits have not been pushed or deployed yet (see OWNER_ACTIONS.md) |
+| Live deployment | browser check, 2026-11-20 | Landing, sign-in, dashboard and Brand Kit load. **On that day the live AI pass timed out** (rule checks were returned), and the production demo data had not been reset after migration 0002. The timeout fallback fix is in the next deploy |
 
 ## What each suite covers
 

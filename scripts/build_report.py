@@ -57,15 +57,15 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
   <div style="font-size:9.5pt">
    <p><strong>Participant:</strong> Priyanka Wanjari (solo) &nbsp;·&nbsp; <strong>Brief:</strong> Inkloom AI &nbsp;·&nbsp; <strong>Organiser:</strong> We Code Coders</p>
    <p><strong>Product:</strong> https://brandguard-5siy.vercel.app &nbsp;·&nbsp; <strong>Code:</strong> https://github.com/Priyanka-lang-bot/brandguard</p>
-   <p class="kicker">Report generated 19 November 2026 from the repository and real screenshots</p>
+   <p class="kicker">Report generated 20 November 2026 from the repository and real screenshots</p>
   </div>
 </div>
 
 <section><h2>Status at a glance</h2>
-<div class="callout"><strong>Read this first.</strong> All final-round code is committed and tested locally (33/33 unit tests, the RLS test suite, 49/49 end-to-end checks, clean build and lint). At the time of writing the commits had <strong>not yet been pushed or deployed</strong>: the build environment had no push permission and no cloud credentials. The live URL still serves the Round 2 version until the owner pushes and runs migration 0002 (docs/OWNER_ACTIONS.md). The AI accuracy evaluation (rules + Gemini) <strong>has not been executed yet</strong> because no Gemini key was available. Every number in this report was measured; nothing was estimated.</div>
+<div class="callout"><strong>Read this first.</strong> Final-round code is deployed at https://brandguard-5siy.vercel.app (checked in a browser on 20 Nov 2026: landing, sign-in, dashboard and Brand Kit work). Locally: 40/40 unit tests, the RLS suite (migrations 0001–0003), 49/49 end-to-end checks and 37/37 scroll-demo checks pass. <strong>Not yet measured:</strong> rules + Gemini accuracy on the 59-post text set, and the vision-mode catch rate on the 24-image set. Both run in CI as soon as the repository has a GEMINI_API_KEY secret. On 20 Nov the live AI pass timed out, and a timeout fallback has been added since. Every number in this report was measured; nothing was estimated.</div>
 <table><tr><th>Item</th><th>Status</th></tr>
 <tr><td>Public landing page, core workflow preserved and improved</td><td>Done</td></tr>
-<tr><td>Improvement 1: image &amp; accessibility checks</td><td>Done. Acceptance test passes (vision response stubbed in that test)</td></tr>
+<tr><td>Improvement 1: image &amp; accessibility checks</td><td>Done, including logo stretch/recolour, brand contrast minimum and rule-cited findings. 24-image set: measurement mode 46/46; vision mode pending a key</td></tr>
 <tr><td>Improvement 2: brand insights dashboard</td><td>Done. SQL views with RLS, drill-down, “possibly unclear” flag</td></tr>
 <tr><td>Improvement 3A: confidentiality masking</td><td>Done. Verified on captured AI payloads</td></tr>
 <tr><td>Improvement 3B: measured accuracy</td><td>Partial. Dataset, script and CI done; rules-only P 100.0% / R 70.3%; AI run not executed</td></tr>
@@ -82,7 +82,7 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
 <section><h2>Product workflow</h2>
 <p><strong>Draft → Analyse → Identify issues → Suggest fixes → Human review → Approval.</strong> Creators write, paste or upload DOCX/PDF/TXT and attach PNG/JPG images. Rule checks, masking, the AI check, the grounding gate and the image checks produce findings. The creator resolves each one, and resolutions become a new version (nested fixes compose). Disputes carry their reasons to the reviewer, who compares versions and approves or requests changes. Every step is in the audit log.</p>
 {img("00-landing-hero", "Public landing page at / (real screenshot of the final-round build).")}
-<div class="grid2">{img("01-login", "Sign-in with one-click demo roles (unchanged flow).")}{img("02-creator-dashboard", "Creator dashboard.")}</div>
+<div class="grid2">{img("01-login", "Sign-in in the landing page style, with one-click demo roles.")}{img("02-creator-dashboard", "Creator dashboard.")}</div>
 </section>
 
 <section><h2>Feature list</h2>{md("docs/FEATURES.md")}</section>
@@ -93,16 +93,16 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
 {img("13-seeded-poster-draft", "Seeded “Exam season poster”: palette, contrast, alt-text and in-image terminology findings. Its text regions come from the poster's design file (labelled), because demo data is seeded without the AI.", crop=1300)}
 </section>
 <section>
-{img("06-reviewer", "Reviewer view: resolutions, disputes and the decision panel. The accepted alt-text suggestion is now the image's alt text.", crop=1500)}
+{img("06-reviewer", "Reviewer view: resolutions, disputes and the decision panel. The accepted alt-text suggestion is now the image's alt text.", crop=1250)}
 <div class="grid2">{img("05-changes-diff", "Word-level diff between versions.")}{img("07-activity", "Audit log after approval.")}</div>
 </section>
 <section>
-{img("08-insights", "Admin insights computed from the RLS-protected views. The seeded demo history is labelled and can be excluded.", crop=2366)}
+{img("08-insights", "Admin insights computed from the RLS-protected views. The seeded demo history is labelled and can be excluded.", crop=1650)}
 </section>
 <section>
 <div class="grid2">{img("09-drilldown", "Drill-down from the most-broken rule, with “Edit this rule”.")}{img("10-confidential", "Brand Kit → Confidential: terms, unreleased products, regex patterns.")}</div>
 <div class="grid2">{img("11-visual-identity", "Brand Kit → Visual identity: palette and logo versions.", crop=1300)}{img("15-ai-disclosure", "Workspace AI disclosure page.", crop=1500)}</div>
-{img("12-mobile-menu", "Mobile landing page with the menu open.", width="26%")}
+<div class="grid2">{img("16-scroll-demo-step3", "Scroll-driven product demo: the steps and preview stay pinned while scrolling.")}{img("12-mobile-menu", "Mobile landing page with the menu open.", width="55%")}</div>
 </section>
 
 <section><h2>Technical architecture</h2>{md("docs/ARCHITECTURE.md")}</section>
@@ -119,7 +119,8 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
 <li><strong>Palette:</strong> downscale to 128 px, k-means in CIELAB with deterministic histogram seeds, merge clusters under ΔE00 6, report colours ≥ 2%. Colours covering ≥ 5% that are more than ΔE00 10 from every palette colour are flagged, with the nearest brand colour. Near-white and near-black neutrals are allowed.</li>
 <li><strong>Contrast:</strong> for each vision text region, the pixels are split into two luminance clusters (smaller = text) and the WCAG 2.2 ratio is computed from the purest half of each. The requirement is 4.5:1, or 3:1 for large text (estimated). The suggested fix is the smallest lightness change that reaches the target.</li>
 <li><strong>Alt text:</strong> missing, generic, file-name or too-short text is flagged, with a vision suggestion. Accepting it writes the alt text to the image.</li>
-<li><strong>Text in image:</strong> runs through the full text pipeline, masking included. <strong>Logo:</strong> the reference logo files are sent with the image; absent or retired versions are flagged.</li></ul>
+<li><strong>Text in image:</strong> runs through the full text pipeline, masking included. <strong>Logo:</strong> the reference logo files are sent with the image. The model identifies the version and its position; BrandGuard then measures proportions (±20%) and colour (ΔE00 &gt; 15) against the reference file. Absent, retired, stretched and recoloured logos are flagged.</li>
+<li><strong>Grounding:</strong> every image finding cites the Brand Kit rule that drives it (check_key). With no rule, that check raises nothing. The contrast requirement is the higher of WCAG AA and the brand minimum (default 4.5:1).</li></ul>
 <h2 style="margin-top:14pt">Analytics implementation</h2>
 <p>Three <code>security_invoker</code> views: <code>insight_findings</code> (distinct issues, latest status), <code>insight_drafts</code> (submission and approval times) and <code>insight_source_stats</code> (dispute rate and <code>possibly_unclear</code> from workspace settings). Filtering and the remaining metrics are pure TypeScript functions with unit tests. Every number links to <code>/insights/drafts</code> with matching filters. Seeded history is flagged <code>demo_seed</code>.</p>
 <h2 style="margin-top:14pt">Confidentiality masking</h2>
@@ -134,6 +135,13 @@ Press: [[EMAIL_1_tf6svn]] or [[PHONE_1_tf6svn]]. [[PRODUCT_1_tf6svn]] is coming 
 <tr><td>Rule checks only</td><td>{ev['posts']}</td><td>{ev['expected']}</td><td>{ev['actual']}</td><td>{ev['tp']}</td><td>{ev['fp']}</td><td>{ev['fn']}</td><td><strong>{ev['precision']*100:.1f}%</strong></td><td><strong>{ev['recall']*100:.1f}%</strong></td><td>n/a</td></tr>
 <tr><td>Rules + Gemini</td><td colspan="9"><strong>Not executed</strong>: no GEMINI_API_KEY was available. CI runs it automatically once the repository secret is set.</td></tr></table>
 <h3>Rules only, by category</h3><table><tr><th>Category</th><th>TP</th><th>FP</th><th>FN</th><th>Precision</th><th>Recall</th></tr>{cat_rows}</table>
+
+<h3>Image test set (Round 2 target: catch ≥ 85%)</h3>
+<p>24 generated posters in eval/images (20 with 46 planted problems, 4 clean): off-palette colours, low-contrast text, missing or weak alt text, banned terms in the image, and missing, retired, stretched or recoloured logos.</p>
+<table><tr><th>Mode</th><th>Planted</th><th>Caught</th><th>Missed</th><th>False positives</th><th>Catch rate</th></tr>
+<tr><td>Measurement (positions from the image design)</td><td>46</td><td>46</td><td>0</td><td>0</td><td><strong>100.0%</strong></td></tr>
+<tr><td>Vision (Gemini supplies positions)</td><td colspan="5"><strong>Not executed</strong>: no API key available</td></tr></table>
+<p>The measurement mode scores BrandGuard's own colour, contrast, alt-text, logo and text-rule logic, assuming perception is perfect. It does not score the vision model. The images are synthetic and were made by the same team, so this is an upper bound.</p>
 <p>The rules never catch facts and prices, outdated offers, unreleased features or third-person tone; that is the AI pass's job. The dataset and the rules were written by the same team, so rules-only precision is optimistic. The first evaluation run found two duplicate-finding bugs in the terminology checker (overlapping or case-duplicate banned variants). They were fixed in the engine with regression tests, and the dataset was not changed.</p>
 </section>
 
@@ -142,8 +150,8 @@ Press: [[EMAIL_1_tf6svn]] or [[PHONE_1_tf6svn]]. [[PRODUCT_1_tf6svn]] is coming 
 <section><h2>Three improvements delivered</h2>{md("docs/IMPROVEMENTS.md")}</section>
 
 <section><h2>Known limitations</h2>
-<ul><li>The final-round code was not deployed or live-verified at the time of writing (no push permission or credentials in the build environment).</li>
-<li>Rules + Gemini precision, recall and grounding rejection are not yet measured.</li>
+<ul><li>Rules + Gemini precision, recall and grounding rejection, and the vision-mode image catch rate, are not yet measured (no API key where the evaluations ran).</li>
+<li>On 20 Nov the live Gemini call timed out. A fallback-on-timeout fix is included, but it has not yet been verified on production.</li>
 <li>Image pixels are sent to the vision model unmasked. Contrast, in-image text and logo checks need the AI. “Large text” is estimated.</li>
 <li>Vision OCR and logo matching quality depend on Gemini and were not benchmarked. Tests stub the vision response.</li>
 <li>One workspace per deployment in practice (sign-ups join the demo workspace). pgvector retrieval is deferred.</li>

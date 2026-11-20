@@ -229,3 +229,80 @@ test("image pixels go to the vision model but logo names are masked", async () =
     stub.restore();
   }
 });
+
+// ---------------------------------------------------------------------------
+// Round 2 wording: logo misuse (stretched, recoloured), brand minimum contrast,
+// and "every finding must cite a visual rule, or it is discarded".
+// ---------------------------------------------------------------------------
+import { measureLogo } from "../src/lib/images/analyze";
+import { missingImageRules, requiredContrast } from "../src/lib/images/findings";
+
+async function posterWithLogo(opts: { scaleX?: number; color?: string }) {
+  // Shield path spans x 40..216, y 16..240 in a 256 box (aspect 176/224).
+  const sx = opts.scaleX ?? 1;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><rect width="1000" height="1000" fill="#FFFFFF"/>
+    <g transform="translate(${600 - 40 * sx}, 584) scale(${sx}, 1)"><path d="M128 16 40 48v64c0 56 38 104 88 128 50-24 88-72 88-128V48z" fill="${opts.color ?? "#5568F2"}"/></g></svg>`;
+  const buf = await sharp(Buffer.from(svg)).png().toBuffer();
+  const box = { x: 0.6, y: 0.6, w: (176 * sx) / 1000, h: 224 / 1000 };
+  return { buf, box };
+}
+
+test("logo proportions and colour are measured against the reference file", async () => {
+  const ref = await makeLogo();
+  const ok = await posterWithLogo({});
+  const m1 = (await measureLogo(ok.buf, ok.box, 1000, 1000, ref))!;
+  assert.ok(Math.abs(m1.stretch - 1) < 0.05, `stretch ${m1.stretch}`);
+  assert.ok(m1.deltaE !== null && m1.deltaE < 3, `ΔE ${m1.deltaE}`);
+  const wide = await posterWithLogo({ scaleX: 1.5 });
+  const m2 = (await measureLogo(wide.buf, wide.box, 1000, 1000, ref))!;
+  assert.ok(Math.abs(m2.stretch - 1.5) < 0.08, `stretch ${m2.stretch}`);
+  const red = await posterWithLogo({ color: "#E5432B" });
+  const m3 = (await measureLogo(red.buf, red.box, 1000, 1000, ref))!;
+  assert.ok(m3.deltaE !== null && m3.deltaE > 15, `ΔE ${m3.deltaE}`);
+});
+
+test("stretched and recoloured logos become cited findings; a correct logo does not", async () => {
+  const k = kit();
+  const ref = await makeLogo();
+  for (const [name, opts, expect] of [
+    ["correct", {}, []],
+    ["stretched", { scaleX: 1.5 }, ["proportions +"]],
+    ["recoloured", { color: "#E5432B" }, ["colour #"]],
+  ] as const) {
+    const p = await posterWithLogo(opts);
+    const measured = await measureLogo(p.buf, p.box, 1000, 1000, ref);
+    const analysis = {
+      version: 1 as const, width: 1000, height: 1000, palette: [], textBlocks: [], contrast: [], extractedText: "", aiAltText: null,
+      logo: { checked: true, present: true, matchedLogoId: "l-current", confidence: "high", note: "", box: p.box, measured },
+      ai: { ran: true, error: null },
+    };
+    const f = imageFindings({ id: "i", file_name: "p.png", alt_text: "Poster with the Lumio shield on a white background", analysis }, k).filter((x) => x.source_label.startsWith("VIS-2"));
+    assert.equal(f.length, expect.length, `${name}: ${JSON.stringify(f.map((x) => x.quote))}`);
+    expect.forEach((e, i) => assert.ok(f[i].quote.includes(e), `${name}: ${f[i].quote}`));
+  }
+});
+
+test("brand minimum contrast raises the WCAG requirement, never lowers it", async () => {
+  assert.equal(requiredContrast(false, {}), 4.5);
+  assert.equal(requiredContrast(true, {}), 4.5, "default brand minimum 4.5:1 applies to large text too");
+  assert.equal(requiredContrast(true, { minContrast: 3 }), 3);
+  assert.equal(requiredContrast(false, { minContrast: 3 }), 4.5, "never below WCAG AA for normal text");
+  assert.equal(requiredContrast(false, { minContrast: 7 }), 7);
+  // A 5:1 region passes at the default but fails a 7:1 brand minimum.
+  const analysis = {
+    version: 1 as const, width: 1000, height: 1000, palette: [], textBlocks: [], extractedText: "", aiAltText: null, logo: null, ai: { ran: true, error: null },
+    contrast: [{ text: "Sale", box: { x: 0, y: 0, w: 0.1, h: 0.1 }, fg: "#777777", bg: "#FFFFFF", ratio: 5, large: false, required: 4.5 }],
+  };
+  const rec = { id: "i", file_name: "p.png", alt_text: "Poster announcing a sale for students", analysis };
+  assert.equal(imageFindings(rec, kit()).filter((x) => x.source_label.startsWith("ACC-4")).length, 0);
+  assert.equal(imageFindings(rec, { ...kit(), minContrast: 7 }).filter((x) => x.source_label.startsWith("ACC-4")).length, 1);
+});
+
+test("an image check with no Brand Kit rule raises nothing (findings must cite a rule)", async () => {
+  const k = kit();
+  k.rules = k.rules.filter((r) => r.check_key !== "palette" && r.check_key !== "alt_text");
+  assert.deepEqual(missingImageRules(k).sort(), ["alt_text", "palette"]);
+  const analysis = await analyzeImage(await makePoster(), { kit: k, logos: [], ai: false });
+  const f = imageFindings({ id: "i", file_name: "p.png", alt_text: "", analysis }, k);
+  assert.equal(f.length, 0, JSON.stringify(f.map((x) => x.source_label)));
+});

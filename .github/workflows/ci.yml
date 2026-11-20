@@ -48,9 +48,15 @@ jobs:
         run: npm run eval
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Image accuracy evaluation (24 images, target ≥ 85%)
+        run: npm run eval:images
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       - name: Publish evaluation summary
         if: always()
-        run: cat eval/results/summary.md >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          cat eval/results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat eval/results/images-summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -3,6 +3,7 @@ import { demoSignIn } from "@/app/actions/auth";
 import { Logo } from "@/components/ui";
 import { Reveal } from "@/components/landing/reveal";
 import { LoginForm } from "./login-form";
+import { DemoButton } from "./demo-button";
 
 export const metadata = { title: "Sign in · BrandGuard" };
 
@@ -74,8 +75,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <div className="mt-6 grid gap-3">
               {ROLES.map((r, i) => (
                 <form key={r.role} action={demoSignIn.bind(null, r.role)}>
-                  <button
-                    type="submit"
+                  <DemoButton
+                    label={`Sign in as ${r.who}, ${r.name}`}
                     className={`group relative w-full rounded-xl border-2 p-4 text-left transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5 ${
                       i === 0 ? "border-ink bg-ink text-paper" : "border-ink/15 bg-white/60 hover:border-ink"
                     }`}
@@ -91,7 +92,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                     {i === 0 && (
                       <span className="kicker absolute -top-3 right-4 rounded-full bg-marker px-2.5 py-1 text-[10px] text-ink">Start here</span>
                     )}
-                  </button>
+                  </DemoButton>
                 </form>
               ))}
             </div>
