@@ -13,16 +13,20 @@ Built for the CodeNova / We Code Coders hackathon (problem statement by Inkloom 
 
 ## Try it
 
-Open the live link and click **Get started**, then pick a demo role. The demo brand, **Lumio**, is a fictional study app.
+Open the live link and click **Get started**, then pick a demo role. The demo brand, **Lumio**, is a fictional study app. Every
+sample draft is tagged **Sample** in the app (`drafts.demo_seed = true`). The app opens in a dark theme; the sun/moon button in the
+top bar switches to the light (ivory) theme and remembers the choice.
 
-1. **Creator (Kabir).** Open *Exam season poster* (an image draft with palette, contrast, alt-text and in-image terminology findings) or
-   *Welcome email for new learners*, or click **New draft** → *Launch post with errors* and attach a PNG or JPG. Accept, edit or
-   dispute each finding, then click **Send for review**.
-2. **Reviewer (Riya).** Switch role in the top bar, open the draft from the review queue, read the resolutions and disputes, check the
-   **Changes** tab, then **Approve** or **Request changes**.
+1. **Creator (Kabir).** Drafts in every state: not yet checked, *Analysed* (open findings), in review, changes requested (with the
+   reviewer's comment) and approved, across email, social, LinkedIn, website copy, a product-launch campaign and two posters. Open
+   *Exam season poster* (palette, contrast, alt-text and in-image terminology findings) or *Welcome email for new learners*, or click
+   **New draft**. Accept, edit or dispute each finding, then click **Send for review**.
+2. **Reviewer (Riya).** Switch role in the top bar. The review queue has six drafts and shows how many disputes each needs a ruling on.
+   Read the resolutions and disputes, check the **Changes** tab, then **Approve** or **Request changes**.
 3. **Admin (Asha).** Use **Insights** to find the most-broken and most-disputed rules, open the drafts behind any number and edit a rule
    in one click. Use **Brand Kit** to manage rules, terminology, the Fact Vault (with expiry dates), visual identity (palette and logos),
-   Confidential Terms and guideline PDF import with per-rule approval. *Reset demo data* restores the sample content.
+   Confidential Terms and guideline PDF import with per-rule approval. **+ Add sample data** adds any missing sample content; it never
+   deletes or changes anything, so it is safe to click twice.
 
 ## How the check works
 
@@ -109,17 +113,20 @@ vision mode, which is the honest end-to-end number, runs automatically in CI onc
    | `SETUP_TOKEN` | Any long random string |
    | `GEMINI_MODEL` | Optional, defaults to `gemini-3.5-flash` (fallback: `GEMINI_FALLBACK_MODEL`, default `gemini-3.5-flash-lite`) |
 
-3. Deploy, then open `https://<your-app>/api/setup?token=<SETUP_TOKEN>` once (or use *Reset demo data* as admin). This creates the demo
-   users, Brand Kit, palette, logos, Confidential Terms, sample drafts (including the poster) and eight weeks of demo history for the
-   insights dashboard. That history is marked `drafts.demo_seed = true` and labelled in the UI. Locally: `npm run seed`.
+3. Deploy, then open `https://<your-app>/api/setup?token=<SETUP_TOKEN>` (or click **+ Add sample data** as admin). This adds whatever is
+   missing of: the demo users, Brand Kit, palette, logos, Confidential Terms, 17 sample drafts and eight weeks of demo history for the
+   insights dashboard. It is **idempotent and additive**: existing records are never deleted or edited, sample drafts have
+   deterministic ids, and a second run adds nothing (`tests/e2e/seed_idempotency.sh` proves this against Postgres with RLS). All
+   sample drafts are stored with `drafts.demo_seed = true` and tagged *Sample* in the UI. Locally: `npm run seed`. A destructive
+   local reset exists only behind an explicit flag (`npm run seed -- --reset` or `&reset=1`).
 
 ## Tests
 
 | Command | What it runs |
 | --- | --- |
-| `npm test` | 40 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
-| `npm run test:sql` | Applies both migrations to a local Postgres 15+ and runs the RLS and insights-view tests (workspace isolation, roles, storage folders) |
-| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks), robustness checks (18: bad input, refresh, double actions, broken URLs, permissions) and the scroll-driven demo (37), against local stand-ins for Supabase and Gemini |
+| `npm test` | 42 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
+| `npm run test:sql` | Applies migrations 0001–0003 to a local Postgres 15+ and runs the RLS and insights-view tests (workspace isolation, roles, storage folders), plus the migration 0003 safety test (fresh, re-run, populated database, missing 0002) |
+| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks), robustness checks (18: bad input, refresh, double actions, broken URLs, permissions), the scroll-driven demo (37), dark/light theme checks and the demo-seed safety test (idempotency, preservation, RLS isolation), against local stand-ins for Supabase and Gemini |
 | `npm run eval` | Text accuracy evaluation (see above) |
 | `npm run eval:images` | Image accuracy evaluation (see above) |
 
@@ -133,6 +140,11 @@ How to run them and the latest results: [`docs/TESTING.md`](docs/TESTING.md). CI
 - Image checks only run when the Brand Kit has a rule for them (`check_key`), because every image finding must cite a rule.
 - "Large text" for WCAG is estimated from the text-region height. The brand minimum (default 4.5:1) applies to all text in images.
 - pgvector retrieval is not implemented. Large kits use lexical selection (see [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+- Rules + Gemini accuracy and the vision-mode image catch rate have not been measured yet (they need the `GEMINI_API_KEY`
+  repository secret; see [`docs/OWNER_ACTIONS.md`](docs/OWNER_ACTIONS.md)).
+- About 1 in 80 page loads logs a React hydration error (#418) that React recovers from automatically. The investigation and its
+  evidence are in [`docs/TESTING.md`](docs/TESTING.md).
+- An honest scorecard against the final-round rubric is in [`docs/SCORECARD.md`](docs/SCORECARD.md).
 
 ## Disclosures
 

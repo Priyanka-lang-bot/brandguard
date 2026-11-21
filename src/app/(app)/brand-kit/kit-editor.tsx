@@ -10,7 +10,7 @@ import {
   deleteRule,
   deleteTerm,
   importGuidelines,
-  resetDemo,
+  loadSampleData,
   saveFact,
   saveRule,
   saveTerm,
@@ -96,12 +96,12 @@ export function KitEditor({
             className="btn-ghost btn-sm mb-1"
             disabled={pending}
             onClick={() => {
-              if (confirm("Reset the demo? This restores the Lumio Brand Kit and the sample drafts. Drafts by the demo accounts are removed.")) {
-                run(() => resetDemo(), () => location.reload());
+              if (confirm("Add the sample data? Missing Lumio Brand Kit entries, sample drafts and demo history are added. Nothing is deleted or changed, and running it again adds nothing new.")) {
+                run(() => loadSampleData(), () => location.reload());
               }
             }}
           >
-            ↺ Reset demo data
+            + Add sample data
           </button>
         )}
       </div>

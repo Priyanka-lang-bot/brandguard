@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { demoSignIn } from "@/app/actions/auth";
 import { Logo } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Reveal } from "@/components/landing/reveal";
 import { LoginForm } from "./login-form";
 import { DemoButton } from "./demo-button";
@@ -27,9 +28,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Link href="/" aria-label="BrandGuard home">
           <Logo className="text-[17px]" />
         </Link>
-        <Link href="/" className="rounded-full px-3 py-2 text-sm font-semibold text-ink-soft transition hover:bg-ink/5 hover:text-ink">
-          ← Back to the website
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="rounded-full px-3 py-2 text-sm font-semibold text-ink-soft transition hover:bg-ink/5 hover:text-ink">
+            ← Back to the website
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main id="main" className="mx-auto grid max-w-[1400px] gap-12 px-5 pb-20 pt-6 sm:px-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16 lg:pt-12">

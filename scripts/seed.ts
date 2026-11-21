@@ -1,7 +1,9 @@
-// Usage: npm run seed   (reads .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, optional GEMINI_API_KEY)
+// Usage: npm run seed            add missing demo data (safe to repeat; never deletes or overwrites)
+//        npm run seed -- --reset destructive local reset (deletes demo-account drafts and the Brand Kit first)
+// Reads .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "node:fs";
-import { seedDemo } from "../src/lib/seed";
+import { ensureDemoData, resetDemoData } from "../src/lib/seed";
 
 if (existsSync(".env.local")) {
   for (const line of readFileSync(".env.local", "utf8").split("\n")) {
@@ -18,8 +20,9 @@ if (!url || !key) {
 }
 
 const admin = createClient(url, key, { auth: { persistSession: false } });
-seedDemo(admin, (m) => console.log("·", m))
-  .then(() => console.log("Seed complete"))
+const run = process.argv.includes("--reset") ? resetDemoData : ensureDemoData;
+run(admin, (m) => console.log("·", m))
+  .then((s) => console.log("Seed complete", JSON.stringify({ created: s.created, skipped: s.skipped })))
   .catch((e) => {
     console.error(e);
     process.exit(1);

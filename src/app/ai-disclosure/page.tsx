@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,10 @@ export default async function AiDisclosure() {
       <header className="border-b border-ink/10">
         <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-5">
           <Link href="/" className="[&_svg_path:first-child]:text-ink"><Logo className="font-display [font-stretch:110%]" /></Link>
-          <Link href={ws ? "/dashboard" : "/login"} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper">{ws ? "Open workspace" : "Sign in"}</Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href={ws ? "/dashboard" : "/login"} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper">{ws ? "Open workspace" : "Sign in"}</Link>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-5 py-14">

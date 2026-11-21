@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui";
 import { NAV_ITEMS } from "./nav-items";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 
 export function SiteNav({ signedIn }: { signedIn: boolean }) {
@@ -52,6 +53,7 @@ export function SiteNav({ signedIn }: { signedIn: boolean }) {
           ))}
         </ul>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           {signedIn ? (
             <Link href="/dashboard" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition hover:bg-ink-soft">
               Open workspace →

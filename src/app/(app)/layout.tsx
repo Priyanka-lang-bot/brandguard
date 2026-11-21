@@ -3,6 +3,7 @@ import { signOut } from "@/app/actions/auth";
 import { Logo, RoleBadge } from "@/components/ui";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { NavLink } from "@/components/nav-link";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { requireProfile } from "@/lib/data";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 {profile.full_name} <RoleBadge role={profile.role} />
               </span>
             )}
+            <ThemeToggle />
             <form action={signOut}>
               <button className="btn-ghost btn-sm">Sign out</button>
             </form>

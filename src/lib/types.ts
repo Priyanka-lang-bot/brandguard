@@ -80,7 +80,7 @@ export interface Candidate {
   source_label: string;
   explanation: string;
   suggestion: string;
-  engine: "rules" | "ai";
+  engine: "rules" | "ai" | "demo";
   /** Set for findings about an attached image (or text inside it). */
   image_id?: string | null;
 }
@@ -119,6 +119,8 @@ export interface Draft {
   status: DraftStatus;
   current_version: number;
   reviewer_id: string | null;
+  /** True for sample drafts created by the demo seed (migration 0002). */
+  demo_seed?: boolean;
   created_at: string;
   updated_at: string;
 }

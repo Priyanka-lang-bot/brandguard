@@ -57,6 +57,10 @@ Status key: **Done** = implemented and tested (unit/SQL/E2E as noted). **Partial
 | Demo sign-in shows progress while signing in | Done | — |
 | Error boundary, 404 page, middleware resilient to auth outage | Done | |
 | CI workflow (lint, types, unit, SQL/RLS, build, eval, E2E) | Done | File present. It runs once the commits are pushed |
+| Sample data for all three roles: 17 sample drafts in every status (email, social, LinkedIn, website, a product-launch campaign, two posters) plus 8 weeks of demo history; tagged "Sample" (`demo_seed`) | Done | `tests/e2e/seed_idempotency.sh`: additive and idempotent (identical counts on re-runs), never edits or deletes existing records, invisible to other workspaces under RLS |
+| Admin "+ Add sample data" (replaces the destructive "Reset demo data" button) | Done | Same test; destructive reset only behind an explicit `--reset` / `reset=1` flag |
+| "Analysed" status (a draft whose current version has been checked) and "Disputes to rule on" column in the review queue | Done | Theme/seed E2E checks |
+| Dark theme (default) and light theme, toggle in every header, saved per browser, applied before first paint | Done | `tests/e2e/theme.py` (8 routes × 2 themes × desktop and phone) |
 
 ## C. Partially implemented
 

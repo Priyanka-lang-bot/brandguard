@@ -41,3 +41,28 @@ export async function makeRetiredLogo(): Promise<Buffer> {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect x="28" y="28" width="200" height="200" rx="48" fill="#2F6FDE"/><text x="128" y="160" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="96" fill="#FFFFFF">L</text></svg>`;
   return sharp(Buffer.from(svg)).png().toBuffer();
 }
+
+/**
+ * Sample "Lumio for Schools" launch poster used by the demo data (marked sample in the app). Built only from the
+ * Brand Kit palette with readable text, so it is the clean counterpart to the acceptance-test poster.
+ * Boxes are [ymin, xmin, ymax, xmax] on a 0-1000 grid, like the vision model returns.
+ */
+export const LAUNCH_POSTER = {
+  width: 800,
+  height: 800,
+  headline: { text: "Lumio for Schools", box: [100, 60, 190, 890] as [number, number, number, number] },
+  sub: { text: "Revise together, class by class", box: [640, 60, 720, 850] as [number, number, number, number] },
+  alt: "Sample poster: the words Lumio for Schools in dark ink on a pale background above a dark band with white text reading Revise together, class by class.",
+};
+
+export async function makeLaunchPoster(): Promise<Buffer> {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800">
+  <rect width="800" height="800" fill="#F1F5F9"/>
+  <text x="56" y="138" font-family="DejaVu Sans, Inter, sans-serif" font-weight="700" font-size="64" fill="#0F172A">Lumio for Schools</text>
+  <rect x="56" y="190" width="200" height="16" fill="#FFE14D"/>
+  <rect x="0" y="480" width="800" height="320" fill="#0F172A"/>
+  <rect x="0" y="720" width="800" height="80" fill="#5568F2"/>
+  <text x="56" y="566" font-family="DejaVu Sans, Inter, sans-serif" font-weight="700" font-size="44" fill="#FFFFFF">Revise together, class by class</text>
+</svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}

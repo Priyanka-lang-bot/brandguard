@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StatusPill } from "@/components/ui";
+import { SampleTag, StatusPill } from "@/components/ui";
 import { loadKit, profileMap, requireProfile } from "@/lib/data";
 import type { Draft, DraftVersion, Finding } from "@/lib/types";
 import { DraftWorkspace } from "./workspace";
@@ -63,7 +63,8 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="page-title">{d.title}</h1>
-          <StatusPill status={d.status} />
+          <StatusPill status={d.status} analysed={!!current?.checked} />
+          {d.demo_seed && <SampleTag />}
         </div>
         <p className="mt-1 text-sm text-mute">
           {d.channel} · by {people[d.author_id]?.full_name ?? "Unknown"} · version {d.current_version}

@@ -23,7 +23,7 @@ def img(name, caption, crop=None, width="100%"):
 ev = json.loads((ROOT / "eval/results/rules.json").read_text())
 cat_rows = "".join(f"<tr><td>{c}</td><td>{v['tp']}</td><td>{v['fp']}</td><td>{v['fn']}</td><td>{'—' if v['precision'] is None else f'{v['precision']*100:.1f}%'}</td><td>{'—' if v['recall'] is None else f'{v['recall']*100:.1f}%'}</td></tr>" for c, v in ev["by_category"].items())
 
-STUB = "AI findings in this screenshot come from the local Gemini stand-in used for testing (explanations start with “Stub:”), not from Gemini."
+SAMPLE = "Screens show the sample data (tagged “Sample”). Rule findings come from the real checks; findings labelled “sample finding (scripted for the demo)” stand in for the AI pass, because sample data is seeded without Gemini."
 
 html = f"""<!doctype html><html><head><meta charset="utf-8"><style>
 @page {{ size: A4; margin: 16mm 15mm 18mm; }}
@@ -57,19 +57,21 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
   <div style="font-size:9.5pt">
    <p><strong>Participant:</strong> Priyanka Wanjari (solo) &nbsp;·&nbsp; <strong>Brief:</strong> Inkloom AI &nbsp;·&nbsp; <strong>Organiser:</strong> We Code Coders</p>
    <p><strong>Product:</strong> https://brandguard-5siy.vercel.app &nbsp;·&nbsp; <strong>Code:</strong> https://github.com/Priyanka-lang-bot/brandguard</p>
-   <p class="kicker">Report generated 20 November 2026 from the repository and real screenshots</p>
+   <p class="kicker">Report generated 21 November 2026 from the repository and real screenshots</p>
   </div>
 </div>
 
 <section><h2>Status at a glance</h2>
-<div class="callout"><strong>Read this first.</strong> Final-round code is deployed at https://brandguard-5siy.vercel.app (checked in a browser on 20 Nov 2026: landing, sign-in, dashboard and Brand Kit work). Locally: 40/40 unit tests, the RLS suite (migrations 0001–0003), 49/49 end-to-end checks and 37/37 scroll-demo checks pass. <strong>Not yet measured:</strong> rules + Gemini accuracy on the 59-post text set, and the vision-mode catch rate on the 24-image set. Both run in CI as soon as the repository has a GEMINI_API_KEY secret. On 20 Nov the live AI pass timed out, and a timeout fallback has been added since. Every number in this report was measured; nothing was estimated.</div>
+<div class="callout"><strong>Read this first.</strong> Production (https://brandguard-5siy.vercel.app) runs commit 4adf0a0. A browser check on 21 Nov 2026 confirmed sign-in, the dashboard, Insights and a live Gemini analysis (11 findings, several “AI, verified”). The later work in this report (audit fixes, sample data for every role, dark/light themes, migration 0003 hardening) is committed and tested locally and goes live when the owner pushes it. Locally: 42/42 unit tests, migrations + RLS, the migration 0003 safety test, 49/49 journey checks, 18/18 robustness checks, 37/37 scroll-demo checks, the theme suite and the seed-safety suite all pass. <strong>Not yet measured:</strong> rules + Gemini accuracy (59 posts) and the vision-mode image catch rate (24 images); both run in CI once the repository has a GEMINI_API_KEY secret. Every number here was measured; nothing was estimated.</div>
 <table><tr><th>Item</th><th>Status</th></tr>
 <tr><td>Public landing page, core workflow preserved and improved</td><td>Done</td></tr>
 <tr><td>Improvement 1: image &amp; accessibility checks</td><td>Done, including logo stretch/recolour, brand contrast minimum and rule-cited findings. 24-image set: measurement mode 46/46; vision mode pending a key</td></tr>
-<tr><td>Improvement 2: brand insights dashboard</td><td>Done. SQL views with RLS, drill-down, “possibly unclear” flag</td></tr>
-<tr><td>Improvement 3A: confidentiality masking</td><td>Done. Verified on captured AI payloads</td></tr>
+<tr><td>Improvement 2: brand insights dashboard</td><td>Done. SQL views with RLS, drill-down, “possibly unclear” flag; verified live on production</td></tr>
+<tr><td>Improvement 3A: confidentiality masking</td><td>Done. Verified on captured AI payloads (local)</td></tr>
 <tr><td>Improvement 3B: measured accuracy</td><td>Partial. Dataset, script and CI done; rules-only P 100.0% / R 70.3%; AI run not executed</td></tr>
-<tr><td>Result cache · AI disclosure page · large-kit retrieval</td><td>Done · Done · Partial (lexical; pgvector deferred)</td></tr>
+<tr><td>Sample data for creator, reviewer and admin</td><td>Done. 17 sample drafts in every status + 8 weeks of history; additive, idempotent, RLS-isolated, tagged “Sample”</td></tr>
+<tr><td>Dark (default) and light themes</td><td>Done. Saved per browser, applied before first paint, checked on 8 routes at desktop and phone widths</td></tr>
+<tr><td>Self-assessed score (see “Honest scorecard”)</td><td>73/100 as deployed today; 81/100 after the owner pushes and adds the sample data</td></tr>
 </table>
 <h3>Overview</h3>
 <p>BrandGuard is a checkpoint between writing and publishing. A creator submits a draft, with images if it has any. BrandGuard checks it against the organisation's own Brand Kit: rules, approved terminology, a Fact Vault with expiry dates, and now a palette, logo files and a confidential-terms list. Each finding quotes the exact words or names the measured image problem, cites the source it breaks, explains why and proposes a minimal fix. People decide: creators accept, edit or dispute every finding, and only a reviewer can approve. Admins see which rules break most often and which ones people dispute.</p>
@@ -81,28 +83,42 @@ figcaption {{ font-size: 8.4pt; color:#55565f; margin-top:3pt; }}
 
 <section><h2>Product workflow</h2>
 <p><strong>Draft → Analyse → Identify issues → Suggest fixes → Human review → Approval.</strong> Creators write, paste or upload DOCX/PDF/TXT and attach PNG/JPG images. Rule checks, masking, the AI check, the grounding gate and the image checks produce findings. The creator resolves each one, and resolutions become a new version (nested fixes compose). Disputes carry their reasons to the reviewer, who compares versions and approves or requests changes. Every step is in the audit log.</p>
-{img("00-landing-hero", "Public landing page at / (real screenshot of the final-round build).")}
-<div class="grid2">{img("01-login", "Sign-in in the landing page style, with one-click demo roles.")}{img("02-creator-dashboard", "Creator dashboard.")}</div>
+{img("00-landing-hero", "Public landing page at /, dark theme (the default).")}
+<div class="grid2">{img("00-landing-hero-light", "The same page in the light theme.")}{img("01-login", "Dark-mode sign-in with one-click demo roles.")}</div>
 </section>
 
 <section><h2>Feature list</h2>{md("docs/FEATURES.md")}</section>
 
 <section><h2>Screenshots of the actual product</h2>
-<p>All screenshots were taken from the production build running against the real migrations on Postgres, through the local stand-ins described under Testing. {STUB}</p>
-{img("04-draft-findings", "Draft with text, AI-verified and image findings. Image panel: measured colours, WCAG ratios drawn on the image, extracted text. The email and phone shown to the user are the restored originals.", crop=1250)}
-{img("13-seeded-poster-draft", "Seeded “Exam season poster”: palette, contrast, alt-text and in-image terminology findings. Its text regions come from the poster's design file (labelled), because demo data is seeded without the AI.", crop=1300)}
+<p>All screenshots are real captures of the production build running against the real migrations on Postgres (with RLS), using the local Supabase and Gemini stand-ins described under Testing. {SAMPLE}</p>
+<h3>Creator</h3>
+{img("02-creator-dashboard", "Creator dashboard: drafts in every status (Draft, Analysed, In review, Changes requested, Approved), each tagged Sample.", crop=1250)}
+{img("04-draft-findings", "Draft analysis: every finding quotes the words, cites the Brand Kit source, explains why and proposes a fix; accept, edit or dispute.", crop=1300)}
+</section>
+<section><h3>Image compliance workflow</h3>
+{img("13-seeded-poster-draft", "Sample “Exam season poster”: measured palette (off-palette pink, nearest brand colour), WCAG contrast drawn on the image (1.54:1 fails the 4.5:1 brand minimum), missing alt text and a retired product name inside the image. Text regions come from the poster's design file (labelled), because sample data is seeded without the AI.", crop=1400)}
+</section>
+<section><h3>Reviewer</h3>
+{img("19-reviewer-dashboard", "Reviewer dashboard: six drafts in the queue and a “Disputes to rule on” column.", crop=1150)}
+{img("06-reviewer", "Review screen: resolutions, the creator's dispute reason and the approve / request-changes panel.", crop=1250)}
 </section>
 <section>
-{img("06-reviewer", "Reviewer view: resolutions, disputes and the decision panel. The accepted alt-text suggestion is now the image's alt text.", crop=1250)}
-<div class="grid2">{img("05-changes-diff", "Word-level diff between versions.")}{img("07-activity", "Audit log after approval.")}</div>
+<div class="grid2">{img("05-changes-diff", "Word-level diff between the checked and submitted versions.")}{img("07-activity", "Audit log of an approved draft, including the reviewer's note.")}</div>
+{img("22-changes-requested", "Creator view of a draft sent back: the reviewer's comment and the disputed Fact Vault finding.", crop=1100)}
+</section>
+<section><h3>Admin</h3>
+{img("20-admin-dashboard", "Admin dashboard.", crop=900)}
+{img("08-insights", "Insights computed from the RLS-protected views: most-broken rules, dispute rates, “possibly unclear” rules, trends and time to approval. Seeded history is labelled and can be excluded.", crop=1650)}
 </section>
 <section>
-{img("08-insights", "Admin insights computed from the RLS-protected views. The seeded demo history is labelled and can be excluded.", crop=1650)}
+<div class="grid2">{img("09-drilldown", "Drill-down from a metric to the drafts behind it.", crop=1100)}{img("14-brand-kit-rules", "Brand Kit → Rules.", crop=1100)}</div>
+<div class="grid2">{img("11-visual-identity", "Brand Kit → Visual identity: palette, logo versions and the brand minimum contrast.", crop=1300)}{img("10-confidential", "Brand Kit → Confidential: terms, unreleased products, regex patterns.", crop=1100)}</div>
 </section>
-<section>
-<div class="grid2">{img("09-drilldown", "Drill-down from the most-broken rule, with “Edit this rule”.")}{img("10-confidential", "Brand Kit → Confidential: terms, unreleased products, regex patterns.")}</div>
-<div class="grid2">{img("11-visual-identity", "Brand Kit → Visual identity: palette and logo versions.", crop=1300)}{img("15-ai-disclosure", "Workspace AI disclosure page.", crop=1500)}</div>
-<div class="grid2">{img("16-scroll-demo-step3", "Scroll-driven product demo: the steps and preview stay pinned while scrolling.")}{img("12-mobile-menu", "Mobile landing page with the menu open.", width="55%")}</div>
+<section><h3>Dark and light themes</h3>
+{img("21-theme-compare", "The same creator dashboard in the dark theme (default) and the light theme. The choice is saved per browser and applied before the first paint.")}
+<h3>Scroll-driven product demonstration</h3>
+<div class="grid2">{img("16-scroll-demo-step3", "Landing page demo: the steps and preview stay pinned while the visitor scrolls.")}{img("17-scroll-demo-approval", "The demo's final step: approval.")}</div>
+<div class="grid2">{img("18-scroll-demo-mobile", "The demo on a phone.", width="70%")}{img("15-ai-disclosure", "Workspace AI disclosure page.", crop=1300)}</div>
 </section>
 
 <section><h2>Technical architecture</h2>{md("docs/ARCHITECTURE.md")}</section>
@@ -149,9 +165,12 @@ Press: [[EMAIL_1_tf6svn]] or [[PHONE_1_tf6svn]]. [[PRODUCT_1_tf6svn]] is coming 
 
 <section><h2>Three improvements delivered</h2>{md("docs/IMPROVEMENTS.md")}</section>
 
+<section><h2>Honest scorecard</h2>{md("docs/SCORECARD.md")}</section>
+
 <section><h2>Known limitations</h2>
 <ul><li>Rules + Gemini precision, recall and grounding rejection, and the vision-mode image catch rate, are not yet measured (no API key where the evaluations ran).</li>
-<li>On 20 Nov the live Gemini call timed out. A fallback-on-timeout fix is included, but it has not yet been verified on production.</li>
+<li>Production runs 4adf0a0 until the owner pushes. On 21 Nov a live Gemini check succeeded in about 20 s; on 20 Nov one had timed out. The fallback-on-timeout fix is in the push and not yet verified on production.</li>
+<li>About 1 in 80 page loads logs React hydration error #418, which React recovers from automatically. Investigation and evidence are under Testing; the root cause is not yet found.</li>
 <li>Image pixels are sent to the vision model unmasked. Contrast, in-image text and logo checks need the AI. “Large text” is estimated.</li>
 <li>Vision OCR and logo matching quality depend on Gemini and were not benchmarked. Tests stub the vision response.</li>
 <li>One workspace per deployment in practice (sign-ups join the demo workspace). pgvector retrieval is deferred.</li>

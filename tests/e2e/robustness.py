@@ -20,7 +20,7 @@ async def main():
         b = await p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"])
         page = await b.new_page(viewport={"width": 1280, "height": 900})
         errors = []
-        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.on("pageerror", lambda e: errors.append(f"{page.url}: {e}"))
         await page.goto(BASE + "/login")
         await page.get_by_role("button", name=re.compile("Kabir")).click()
         await page.wait_for_url("**/dashboard")

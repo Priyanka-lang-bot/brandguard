@@ -5,14 +5,29 @@ export { cx };
 
 const STATUS: Record<DraftStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-line text-soft ring-line" },
-  in_review: { label: "In review", cls: "bg-marker/50 text-ink ring-[#c9a800]/40" },
+  in_review: { label: "In review", cls: "bg-marker/50 text-ink ring-[#c9a800]/40 dark:bg-marker/15 dark:text-marker dark:ring-marker/35" },
   changes_requested: { label: "Changes requested", cls: "bg-amber-500/10 text-amber-800 ring-amber-500/30" },
   approved: { label: "Approved", cls: "bg-emerald-500/10 text-emerald-800 ring-emerald-500/30" },
 };
 
-export function StatusPill({ status }: { status: DraftStatus }) {
+/** `analysed` refines "Draft": a draft whose current version has been checked shows as "Analysed". */
+export function StatusPill({ status, analysed }: { status: DraftStatus; analysed?: boolean }) {
   const s = STATUS[status];
-  return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset", s.cls)}>{s.label}</span>;
+  const label = status === "draft" && analysed ? "Analysed" : s.label;
+  const cls = status === "draft" && analysed ? "bg-surface-2 text-ink ring-line-strong" : s.cls;
+  return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset", cls)}>{label}</span>;
+}
+
+/** Marks records created by the demo seed, so sample content is never mistaken for real work. */
+export function SampleTag() {
+  return (
+    <span
+      title="Sample data created by the demo seed (fictional brand, not real work)"
+      className="inline-flex items-center rounded border border-dashed border-line-strong px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-mute"
+    >
+      Sample
+    </span>
+  );
 }
 
 const SEV: Record<Severity, string> = {
@@ -75,7 +90,7 @@ export function Logo({ className = "" }: { className?: string }) {
     <span className={cx("inline-flex items-center gap-2 font-display font-bold tracking-tight [font-stretch:110%]", className)}>
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor" className="text-ink" />
-        <path d="m8.5 12 2.4 2.4 4.6-4.8" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="m8.5 12 2.4 2.4 4.6-4.8" fill="none" stroke="var(--color-paper)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       BrandGuard
     </span>

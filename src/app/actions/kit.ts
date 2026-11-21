@@ -5,7 +5,7 @@ import { loadKit, requireProfile } from "@/lib/data";
 import { aiAvailable, extractRules } from "@/lib/engine/gemini";
 import { parsePattern } from "@/lib/engine/deterministic";
 import { extractText } from "@/lib/extract";
-import { seedDemo } from "@/lib/seed";
+import { ensureDemoData } from "@/lib/seed";
 import { createServiceClient } from "@/lib/supabase/server";
 import { randomUUID } from "node:crypto";
 import { inspectImage } from "@/lib/images/analyze";
@@ -201,15 +201,20 @@ export async function importGuidelines(_: unknown, formData: FormData) {
   }
 }
 
-export async function resetDemo() {
+/**
+ * Adds any missing sample data (Brand Kit entries, sample drafts, demo history). Never deletes or overwrites:
+ * running it again finds everything already there and adds nothing.
+ */
+export async function loadSampleData() {
   try {
     await requireAdmin();
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return { error: "SUPABASE_SERVICE_ROLE_KEY is not set on the server." };
-    await seedDemo(createServiceClient());
+    const s = await ensureDemoData(createServiceClient());
     revalidatePath("/", "layout");
-    return { ok: true };
+    const added = Object.values(s.created).reduce((a, b) => a + b, 0) - (s.created.users ?? 0);
+    return { ok: true, added };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Reset failed" };
+    return { error: e instanceof Error ? e.message : "Loading sample data failed" };
   }
 }
 

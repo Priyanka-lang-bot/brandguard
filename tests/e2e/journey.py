@@ -34,7 +34,7 @@ async def main():
         ctx = await b.new_context(viewport={"width": 1440, "height": 900})
         page = await ctx.new_page()
         errors = []
-        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.on("pageerror", lambda e: errors.append(f"{page.url}: {e}"))
 
         # 1. Public landing page, no auth
         r = await page.goto(BASE + "/")

@@ -107,10 +107,10 @@ function HeroEditor() {
         <div className="grid gap-0 sm:grid-cols-[minmax(0,1fr)_220px]">
           <p className="p-5 text-[15.5px] leading-[2.05] text-ink">
             Board exams are coming
-            <mark className="rounded-sm bg-sky-200/80 px-0.5 text-inherit underline decoration-sky-600 decoration-2 underline-offset-4">!!!</mark> 📚 Lumio is{" "}
+            <mark className="rounded-sm bg-sky-200/80 px-0.5 text-inherit dark:bg-sky-400/25 underline decoration-sky-600 decoration-2 underline-offset-4">!!!</mark> 📚 Lumio is{" "}
             <mark className="rounded-sm bg-proof/15 px-0.5 text-inherit underline decoration-proof decoration-2 underline-offset-4">India&apos;s top</mark> study app, and our flashcards{" "}
             <mark className="rounded-sm bg-proof/15 px-0.5 text-inherit underline decoration-proof decoration-2 underline-offset-4">guarantee</mark> better marks. Go all in with{" "}
-            <mark className="rounded-sm bg-marker/80 px-0.5 text-inherit underline decoration-[#b08900] decoration-2 underline-offset-4">Lumio Premium</mark> for ₹199 a month.
+            <mark className="rounded-sm bg-marker/80 px-0.5 text-inherit dark:bg-marker/25 underline decoration-[#b08900] decoration-2 underline-offset-4">Lumio Premium</mark> for ₹199 a month.
           </p>
           <div className="grid content-start gap-2 border-t border-ink/10 p-4 sm:border-l sm:border-t-0">
             {[
@@ -121,7 +121,7 @@ function HeroEditor() {
               <div key={code} className="rounded-lg border border-ink/10 bg-paper/70 p-2.5">
                 <div className="flex items-center justify-between">
                   <code className="text-[11px] font-bold">{code}</code>
-                  <span className={`kicker text-[10px] ${sev === "high" ? "text-proof" : "text-[#8a6d00]"}`}>{sev}</span>
+                  <span className={`kicker text-[10px] ${sev === "high" ? "text-proof" : "text-[#8a6d00] dark:text-marker"}`}>{sev}</span>
                 </div>
                 <p className="text-[12.5px] font-medium leading-tight">{title}</p>
                 <p className="mt-1 text-[12px] text-approve">→ {fix}</p>
@@ -146,7 +146,7 @@ function Marquee() {
   const words = ["Terminology", "Approved facts", "Claims", "Tone of voice", "Accessibility", "Visual identity", "Confidentiality", "Human approval"];
   const row = [...words, ...words];
   return (
-    <div className="overflow-hidden border-y-2 border-ink bg-ink py-4 text-paper" aria-hidden>
+    <div className="band overflow-hidden border-y-2 border-ink bg-ink py-4 text-paper" aria-hidden>
       <div className="marquee-track flex gap-10 whitespace-nowrap">
         {row.map((w, i) => (
           <span key={i} className="display-tight flex items-center gap-10 text-3xl sm:text-4xl">
@@ -185,7 +185,7 @@ function Problem() {
             <article
               key={p.tag}
               style={{ rotate: p.rot }}
-              className={`clipping reveal relative rounded-md p-5 transition hover:rotate-0 hover:-translate-y-1 ${i === 6 ? "sm:col-span-2 bg-ink text-paper" : ""} reveal-d${(i % 3) + 1}`}
+              className={`clipping reveal relative rounded-md p-5 transition hover:rotate-0 hover:-translate-y-1 ${i === 6 ? "band sm:col-span-2 bg-ink text-paper" : ""} reveal-d${(i % 3) + 1}`}
             >
               <span className="tape -top-3 left-1/2 -translate-x-1/2" />
               <p className={`kicker ${i === 6 ? "text-marker" : "text-proof"}`}>{p.tag}</p>
@@ -302,7 +302,7 @@ function Features() {
         <Reveal
           as="div"
           key={ch.no}
-          className={`border-t-2 border-ink py-16 sm:py-20 ${ch.dark ? "bg-ink text-paper" : "bg-paper"}`}
+          className={`border-t-2 border-ink py-16 sm:py-20 ${ch.dark ? "band bg-ink text-paper" : "bg-paper"}`}
         >
           <div className="mx-auto grid max-w-[1400px] gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
             <div className="lg:sticky lg:top-28 lg:self-start">
@@ -354,7 +354,7 @@ const ROLES = [
 
 function Workflow() {
   return (
-    <Reveal as="section" id="workflow" className="border-t-2 border-ink bg-ink py-24 text-paper sm:py-32">
+    <Reveal as="section" id="workflow" className="band border-t-2 border-ink bg-ink py-24 text-paper sm:py-32">
       <div className="mx-auto max-w-[1400px] px-5 sm:px-8">
         <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
           <p className="kicker reveal text-paper/60">04 — How it works</p>
@@ -409,7 +409,7 @@ function Insights() {
         <div className="reveal reveal-d2 relative mt-14">
           <span className="kicker absolute -top-3 left-6 z-10 rounded-full bg-proof px-3 py-1 text-white">Illustrative data</span>
           <div className="clipping grid gap-px overflow-hidden rounded-2xl bg-ink/10 md:grid-cols-6">
-            <div className="bg-[#fffdf8] p-6 md:col-span-4">
+            <div className="bg-[var(--surface-raised)] p-6 md:col-span-4">
               <p className="kicker text-ink-soft">Most-broken rules · last 8 weeks</p>
               <ul className="mt-5 grid gap-3">
                 {bars.map(([label, v]) => (
@@ -423,7 +423,7 @@ function Insights() {
                 ))}
               </ul>
             </div>
-            <div className="bg-[#fffdf8] p-6 md:col-span-2">
+            <div className="bg-[var(--surface-raised)] p-6 md:col-span-2">
               <p className="kicker text-ink-soft">Disputed guidelines</p>
               <p className="mt-4 font-display text-lg font-bold">TONE-2</p>
               <p className="text-sm text-ink-soft">48% of findings disputed</p>
@@ -444,7 +444,7 @@ function Insights() {
 }
 function Metric({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="bg-[#fffdf8] p-5 md:col-span-1">
+    <div className="bg-[var(--surface-raised)] p-5 md:col-span-1">
       <p className="kicker text-[10px] text-ink-soft">{label}</p>
       <p className="mt-3 font-display text-2xl font-bold leading-none [font-stretch:90%]">{value}</p>
       <p className="mt-1 text-xs text-ink-soft">{sub}</p>
@@ -547,7 +547,7 @@ function FinalCta({ startHref, signedIn }: { startHref: string; signedIn: boolea
 
 function Footer() {
   return (
-    <footer className="bg-ink pb-10 pt-16 text-paper">
+    <footer className="band bg-ink pb-10 pt-16 text-paper">
       <div className="mx-auto max-w-[1400px] px-5 sm:px-8">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>

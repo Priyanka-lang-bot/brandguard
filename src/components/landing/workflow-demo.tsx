@@ -42,8 +42,8 @@ type StepKey = (typeof STEPS)[number]["key"];
 
 const SEV_CLS: Record<Sev, string> = {
   high: "bg-proof/15 decoration-proof",
-  medium: "bg-marker/70 decoration-[#b08900]",
-  low: "bg-sky-200/70 decoration-sky-600",
+  medium: "bg-marker/70 decoration-[#b08900] dark:bg-marker/25 dark:decoration-marker",
+  low: "bg-sky-200/70 decoration-sky-600 dark:bg-sky-400/25 dark:decoration-sky-400",
 };
 const findings = SAMPLE.filter((p): p is Exclude<Part, string> => typeof p !== "string");
 const DISPUTED = "f";
@@ -274,7 +274,7 @@ function DemoBody({ k }: { k: StepKey }) {
             return (
               <span key={i}>
                 {kept ? (
-                  <mark className="rounded-sm bg-orange-100 px-0.5 text-inherit underline decoration-orange-400 decoration-dashed decoration-2 underline-offset-4">{p.original}</mark>
+                  <mark className="rounded-sm bg-orange-100 dark:bg-orange-400/20 px-0.5 text-inherit underline decoration-orange-400 decoration-dashed decoration-2 underline-offset-4">{p.original}</mark>
                 ) : (
                   <>
                     <del className="strike-proof text-ink-soft/70">{p.original}</del>{" "}
@@ -296,10 +296,10 @@ function DemoBody({ k }: { k: StepKey }) {
           ))}
         {(k === "issues" || k === "fixes") &&
           findings.map((f) => (
-            <div key={f.id} className="rounded-lg border border-ink/10 bg-white/70 px-3 py-2">
+            <div key={f.id} className="rounded-lg border border-ink/10 bg-white/70 dark:bg-surface-2 px-3 py-2">
               <div className="flex items-center justify-between">
                 <code className="text-[11px] font-bold">{f.code}</code>
-                <span className={`kicker ${f.sev === "high" ? "text-proof" : f.sev === "medium" ? "text-[#8a6d00]" : "text-sky-700"}`}>{f.sev}</span>
+                <span className={`kicker ${f.sev === "high" ? "text-proof" : f.sev === "medium" ? "text-[#8a6d00] dark:text-marker" : "text-sky-700"}`}>{f.sev}</span>
               </div>
               <p className="mt-0.5 text-[13px] leading-snug text-ink-soft">{k === "fixes" ? <>→ <span className="text-approve">{f.fix}</span></> : f.why}</p>
             </div>
@@ -307,7 +307,7 @@ function DemoBody({ k }: { k: StepKey }) {
         {k === "review" && (
           <>
             <SideNote title="Creator">5 fixes accepted · 1 disputed</SideNote>
-            <div className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-[13px]">
+            <div className="rounded-lg border border-orange-300 bg-orange-50 dark:border-orange-400/40 dark:bg-orange-400/10 px-3 py-2 text-[13px]">
               <strong className="kicker text-orange-700">Dispute · ACC-1</strong>
               <p className="mt-1 text-ink-soft">“It&apos;s the label on an in-app button, not link text.”</p>
             </div>
@@ -327,7 +327,7 @@ function DemoBody({ k }: { k: StepKey }) {
 
 function SideNote({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-ink/10 bg-white/70 px-3 py-2">
+    <div className="rounded-lg border border-ink/10 bg-white/70 dark:bg-surface-2 px-3 py-2">
       <div className="kicker text-ink-soft/70">{title}</div>
       <div className="mt-0.5 text-[13px] leading-snug">{children}</div>
     </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StatusPill, timeAgo } from "@/components/ui";
+import { SampleTag, StatusPill, timeAgo } from "@/components/ui";
 import { profileMap, requireProfile } from "@/lib/data";
 import type { Draft } from "@/lib/types";
 
@@ -10,14 +10,23 @@ export default async function Dashboard() {
   const [{ data: drafts }, people, { data: versions }, { data: openFindings }] = await Promise.all([
     supabase.from("drafts").select("*").order("updated_at", { ascending: false }),
     profileMap(supabase),
-    supabase.from("draft_versions").select("id, draft_id, version_no"),
-    supabase.from("findings").select("version_id, status, severity").eq("status", "open"),
+    supabase.from("draft_versions").select("id, draft_id, version_no, checked"),
+    supabase.from("findings").select("version_id, status, severity").in("status", ["open", "disputed"]),
   ]);
   const list = (drafts ?? []) as Draft[];
-  const currentVersionId = new Map(
-    list.map((d) => [d.id, versions?.find((v) => v.draft_id === d.id && v.version_no === d.current_version)?.id]),
+  const current = new Map(list.map((d) => [d.id, versions?.find((v) => v.draft_id === d.id && v.version_no === d.current_version)]));
+  // The version the reviewer sees findings for: the latest checked version up to the current one.
+  const checkedVersionId = new Map(
+    list.map((d) => [
+      d.id,
+      (versions ?? []).filter((v) => v.draft_id === d.id && v.checked && v.version_no <= d.current_version).sort((a, b) => b.version_no - a.version_no)[0]?.id,
+    ]),
   );
-  const openCount = (d: Draft) => (openFindings ?? []).filter((f) => f.version_id === currentVersionId.get(d.id)).length;
+  const findingsOf = (versionId: string | undefined, status: string) =>
+    versionId ? (openFindings ?? []).filter((f) => f.version_id === versionId && f.status === status) : [];
+  const openCount = (d: Draft) => findingsOf(current.get(d.id)?.id, "open").length;
+  const disputedCount = (d: Draft) => findingsOf(checkedVersionId.get(d.id), "disputed").length;
+  const analysed = (d: Draft) => !!current.get(d.id)?.checked;
 
   const isReviewer = profile.role !== "creator";
   const queue = list.filter((d) => d.status === "in_review" && d.author_id !== user.id);
@@ -63,13 +72,15 @@ export default async function Dashboard() {
           drafts={queue}
           people={people}
           openCount={openCount}
+          disputedCount={disputedCount}
+          analysed={analysed}
           highlight
         />
       )}
       {profile.role !== "reviewer" && (
-        <DraftTable title="My drafts" empty="You haven't written anything yet." drafts={mine} people={people} openCount={openCount} />
+        <DraftTable title="My drafts" empty="You haven't written anything yet." drafts={mine} people={people} openCount={openCount} analysed={analysed} />
       )}
-      <DraftTable title="Everything else in the workspace" empty="No other drafts." drafts={others} people={people} openCount={openCount} />
+      <DraftTable title="Everything else in the workspace" empty="No other drafts." drafts={others} people={people} openCount={openCount} analysed={analysed} />
     </div>
   );
 }
@@ -91,13 +102,13 @@ function GuideCard({ role, hasQueue }: { role: string; hasQueue: boolean }) {
             "Set the palette, logos and Confidential Terms under Brand Kit → Visual identity / Confidential.",
           ]
         : [
-            "Open the Welcome email or the Exam season poster below (both already have findings), or click New draft.",
+            "Open a sample marked Analysed (the Welcome email or the Exam season poster have open findings), or click New draft.",
             "For each finding: accept the fix, edit it, or dispute it with a reason.",
             "Send for review when nothing is left open.",
             "Switch to Reviewer (top right) to approve it.",
           ];
   return (
-    <section className="relative rounded-2xl border-2 border-ink bg-marker/25 p-5">
+    <section className="relative rounded-2xl border-2 border-ink bg-marker/25 p-5 dark:border-marker/50 dark:bg-marker/[0.07]">
       <h2 className="kicker text-ink">How to try BrandGuard as {role}</h2>
       <ol className="mt-3 grid gap-2 text-sm text-soft sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
@@ -119,6 +130,8 @@ function DraftTable({
   drafts,
   people,
   openCount,
+  disputedCount,
+  analysed,
   highlight,
 }: {
   title: string;
@@ -126,6 +139,9 @@ function DraftTable({
   drafts: Draft[];
   people: Record<string, { full_name: string }>;
   openCount: (d: Draft) => number;
+  /** Review queue only: disputed findings the reviewer has to rule on. */
+  disputedCount?: (d: Draft) => number;
+  analysed: (d: Draft) => boolean;
   highlight?: boolean;
 }) {
   return (
@@ -147,28 +163,31 @@ function DraftTable({
                 <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Channel</th>
                 <th className="hidden px-4 py-2.5 font-medium md:table-cell">Author</th>
                 <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Open findings</th>
+                <th className="hidden px-4 py-2.5 font-medium sm:table-cell">{disputedCount ? "Disputes to rule on" : "Open findings"}</th>
                 <th className="hidden px-4 py-2.5 text-right font-medium md:table-cell">Updated</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {drafts.map((d) => {
-                const open = ["draft", "changes_requested"].includes(d.status) ? openCount(d) : 0;
+                const open = disputedCount ? disputedCount(d) : ["draft", "changes_requested"].includes(d.status) ? openCount(d) : 0;
                 return (
                   <tr key={d.id} className="hover:bg-surface-2">
                     <td className="px-4 py-3">
                       <Link href={`/drafts/${d.id}`} className="font-medium text-fg hover:text-brand-300 hover:underline">
                         {d.title}
                       </Link>
-                      <div className="text-xs text-mute">v{d.current_version}</div>
+                      <div className="mt-0.5 flex items-center gap-2 text-xs text-mute">
+                        v{d.current_version}
+                        {d.demo_seed && <SampleTag />}
+                      </div>
                     </td>
                     <td className="hidden px-4 py-3 text-mute sm:table-cell">{d.channel}</td>
                     <td className="hidden px-4 py-3 text-mute md:table-cell">{people[d.author_id]?.full_name ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <StatusPill status={d.status} />
+                      <StatusPill status={d.status} analysed={analysed(d)} />
                     </td>
                     <td className="hidden px-4 py-3 sm:table-cell">
-                      {open ? <span className="font-medium text-amber-800">{open}</span> : <span className="text-dim">—</span>}
+                      {open ? <span className={disputedCount ? "font-medium text-proof" : "font-medium text-amber-800"}>{open}</span> : <span className="text-dim">—</span>}
                     </td>
                     <td className="hidden px-4 py-3 text-right text-mute md:table-cell">{timeAgo(d.updated_at)}</td>
                   </tr>

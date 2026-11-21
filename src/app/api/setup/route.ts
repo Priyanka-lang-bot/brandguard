@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { seedDemo } from "@/lib/seed";
+import { ensureDemoData, resetDemoData } from "@/lib/seed";
 import { createServiceClient } from "@/lib/supabase/server";
 import { pingGemini } from "@/lib/engine/gemini";
 
@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * One-time demo setup: creates the demo users, Brand Kit and sample drafts.
- * Protected by SETUP_TOKEN; call /api/setup?token=<SETUP_TOKEN> once after deploying.
+ * Demo setup: adds the demo users, Brand Kit and sample drafts that are missing. Safe to call repeatedly — it
+ * never deletes or overwrites data (see src/lib/seed.ts). Protected by SETUP_TOKEN:
+ *   /api/setup?token=<SETUP_TOKEN>
+ * &reset=1 runs the destructive reset instead (deletes demo-account drafts and the Brand Kit first).
  */
 export async function GET(req: NextRequest) {
   const token = process.env.SETUP_TOKEN;
@@ -27,8 +29,9 @@ export async function GET(req: NextRequest) {
   }
   const log: string[] = [];
   try {
-    await seedDemo(createServiceClient(), (m) => log.push(m));
-    return NextResponse.json({ ok: true, log });
+    const reset = req.nextUrl.searchParams.get("reset") === "1";
+    const summary = await (reset ? resetDemoData : ensureDemoData)(createServiceClient(), (m) => log.push(m));
+    return NextResponse.json({ ok: true, mode: reset ? "reset" : "additive", summary, log });
   } catch (e) {
     return NextResponse.json({ ok: false, log, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

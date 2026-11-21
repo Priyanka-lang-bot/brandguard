@@ -25,6 +25,7 @@ export NEXT_PUBLIC_SUPABASE_ANON_KEY=$(grep ANON_KEY /tmp/mock-supabase.log | cu
 export SUPABASE_SERVICE_ROLE_KEY=$(grep SERVICE_KEY /tmp/mock-supabase.log | cut -d= -f2)
 export GEMINI_API_KEY=local-stub-key GEMINI_API_BASE=http://127.0.0.1:54400 SETUP_TOKEN=local-e2e-token
 npm run seed
+npm run seed   # second run must add nothing (tests/e2e/seed_idempotency.sh checks this in detail)
 npm run build > /tmp/next-build.log
 npx next start -p 3100 > /tmp/next.log 2>&1 &
 NEXT_PID=$!
@@ -32,3 +33,6 @@ sleep 4
 GEMINI_LOG=/tmp/gemini-requests.jsonl BASE=http://localhost:3100 python3 tests/e2e/journey.py
 BASE=http://localhost:3100 python3 tests/e2e/scroll_demo.py
 BASE=http://localhost:3100 python3 tests/e2e/robustness.py
+BASE=http://localhost:3100 python3 tests/e2e/theme.py
+kill $MOCK_PID 2>/dev/null || true
+bash tests/e2e/seed_idempotency.sh

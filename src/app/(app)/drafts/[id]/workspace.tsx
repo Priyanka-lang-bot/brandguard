@@ -393,7 +393,7 @@ function FindingsTab(
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={cx("rounded-full px-2.5 py-1 font-medium capitalize", filter === f ? "bg-brand-600 text-white" : "bg-surface text-mute ring-1 ring-line")}
+                className={cx("rounded-full px-2.5 py-1 font-medium capitalize", filter === f ? "bg-brand-600 text-paper" : "bg-surface text-mute ring-1 ring-line")}
               >
                 {f}
               </button>
@@ -553,7 +553,7 @@ function FindingCard({
         aria-expanded={showSource}
       >
         <span aria-hidden>📎</span> {f.source_label}
-        <span className="text-dim">· {f.engine === "ai" ? "AI, verified" : "rule match"}</span>
+        <span className="text-dim">· {f.engine === "ai" ? "AI, verified" : f.engine === "demo" ? "sample finding (scripted for the demo)" : "rule match"}</span>
       </button>
       {showSource && sourceDetail && (
         <blockquote className="mt-2 border-l-2 border-line-strong pl-3 text-xs text-mute">{sourceDetail}</blockquote>

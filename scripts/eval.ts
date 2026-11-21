@@ -121,6 +121,9 @@ const pct = (v: number | null | undefined) => (v === null || v === undefined ? "
     writeFileSync(`eval/results/${r.mode}.json`, JSON.stringify(r, null, 1));
   }
   if (fullNote) md += `| Rules + AI | ${fullNote} | | | | | | | | |\n`;
+  const full = runs.find((r) => r.mode === "full");
+  if (full?.grounding?.posts_where_ai_failed)
+    md += `\n**Incomplete AI run:** the AI call failed on ${full.grounding.posts_where_ai_failed} of ${full.posts} posts (those posts were scored on rule checks only). Re-run before quoting the Rules + AI row.\n`;
   for (const r of runs) {
     md += `\n## ${r.mode === "rules" ? "Rule checks only" : "Rules + AI"}: by category\n\n| Category | TP | FP | FN | Precision | Recall |\n|---|---|---|---|---|---|\n`;
     for (const [c, v] of Object.entries(r.by_category)) md += `| ${c} | ${v.tp} | ${v.fp} | ${v.fn} | ${pct(v.precision)} | ${pct(v.recall)} |\n`;
