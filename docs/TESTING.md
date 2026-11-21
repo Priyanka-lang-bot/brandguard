@@ -8,13 +8,13 @@ All results below were produced on 2026-11-19 and 2026-11-20 from the final-roun
 | --- | --- | --- |
 | Lint | `npm run lint` | 0 problems (the one Round 2 error was fixed) |
 | Types | `npx tsc --noEmit` | 0 errors |
-| Unit / integration | `npm test` | **42 / 42 passed** |
+| Unit / integration | `npm test` | **43 / 43 passed** |
 | Migrations + RLS (Postgres 16) | `npm run test:sql` | **Passed** (0001–0003 apply in single transactions; RLS suite passes) |
 | Migration 0003 safety | `bash tests/sql/migration_0003_test.sh` (part of `test:sql`) | **All checks passed**: fresh DB, second run is a no-op, a populated DB keeps every row and setting, out-of-range values rejected, insight views unaffected, and without 0002 it stops with a clear message and changes nothing |
 | Production build | `npm run build` | Passed (13 routes) |
 | End-to-end judge journey | `bash tests/e2e/run.sh` | **49 / 49 checks passed** |
-| Robustness (bad input, refresh, double actions, broken URLs, permissions, empty states) | `BASE=… python3 tests/e2e/robustness.py` | **18 / 18 checks passed** |
-| Demo seed safety (empty DB, 3 re-runs, genuine data present, RLS isolation, interrupted run) | `bash tests/e2e/seed_idempotency.sh` | **All checks passed**: identical row counts on every re-run; a genuine draft, a custom rule and an admin-edited fact survive untouched; an admin in another workspace sees 0 sample drafts, findings, rules, facts or insight rows; a creator cannot edit another author's draft |
+| Robustness (bad input, refresh, double actions, broken URLs, permissions, empty states) | `BASE=… python3 tests/e2e/robustness.py` | **21 / 21 checks passed** (incl. re-checking a draft with a carried-over dispute) |
+| Demo seed safety (stand-in fidelity, empty DB, 3 re-runs, genuine data present, RLS isolation, interrupted runs) | `bash tests/e2e/seed_idempotency.sh` | **All checks passed**: the stand-in rejects a mixed-key batch like PostgREST does; a sample left half-written at the findings insert (the exact production state of 21 Nov) is completed in place; identical row counts on every re-run; a genuine draft, a custom rule and an admin-edited fact survive untouched; an admin in another workspace sees 0 sample drafts, findings, rules, facts or insight rows; a creator cannot edit another author's draft |
 | Dark / light theme | `BASE=… python3 tests/e2e/theme.py` | **All checks passed**: dark by default, toggle, persists across reload and navigation, applied before first visible element, saved theme restored if React re-creates the `<html>` attributes, both themes on 8 routes at 1366 px and 390 px with no overflow or page errors, seeded data per role |
 | Hydration soak (informational) | `BASE=… SOAK_ROUNDS=120 python3 tests/e2e/hydration_soak.py` | 480 loads: 6 hydration errors (1.25%), saved theme lost on 0 pages. See "Known intermittent issue" below |
 | Scroll-driven product demo | `BASE=… python3 tests/e2e/scroll_demo.py` | **37 / 37 checks passed** (3 desktop sizes; phone, tablet, short laptop; reduced motion) |
@@ -68,6 +68,26 @@ Postgres.
 - Admin insights: flag, drill-down from the top rule, "Edit this rule" saves, channel filter, demo exclusion.
 - Creator blocked from insights; mobile menu; no client JS errors.
 - Finally, **every logged AI request is scanned for the four secrets** (none found; placeholders present).
+
+## Production bug found on 21 Nov 2026 (fixed in code, needs deploy)
+
+**Symptom:** "+ Add sample data" on production failed with `insert findings: null value in column "status" of relation
+"findings" violates not-null constraint`.
+
+**Cause:** for a batch insert, supabase-js sends the union of all rows' keys as `?columns=` and, by default
+(`defaultToNull: true`), no `Prefer: missing=default`. PostgREST then stores NULL, not the column default, for a key a row
+lacks. The seed inserted open findings (no `status` key) in the same batch as resolved ones (`status` set), so the open rows got
+NULL in `findings.status` (`NOT NULL DEFAULT 'open'`, enum `open | accepted | edited | disputed`). The same pattern was in the
+app's re-check (`addCheckedVersion`): a carried-over disputed finding next to new findings, so re-checking a draft that had a
+dispute would also have failed on production.
+
+**Why the tests missed it:** the local Supabase stand-in applied column defaults to missing keys regardless. It now follows
+PostgREST (defaults only with `Prefer: missing=default`), and the seed test checks that.
+
+**Fix:** every findings row sets `status` and the resolution columns explicitly (`findingRow()` in the seed, the re-check
+rows in `drafts.ts`). The seed is now resumable: a sample counts as complete only when its activity events exist (written
+last); a half-written sample is completed in place (existing draft, versions, image and findings are reused; nothing is deleted
+or overwritten). Reproduced first with the old code (seed and re-check both fail with the exact message), then passing.
 
 ## The local stand-ins (how E2E runs without cloud credentials)
 

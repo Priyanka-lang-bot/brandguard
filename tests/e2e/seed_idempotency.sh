@@ -36,6 +36,18 @@ snapshot() {
 fail=0
 check() { if [ "$2" = "$3" ]; then echo "  ok   $1"; else echo "  FAIL $1 (got '$2', want '$3')"; fail=1; fi; }
 
+echo "· stand-in matches PostgREST for batch inserts (production bug 21 Nov: findings.status NULL)"
+# supabase-js sends the union of all rows' keys as ?columns=; PostgREST stores NULL for a key a row lacks unless the
+# request says Prefer: missing=default. terms.note is NOT NULL DEFAULT '' like findings.status.
+WS0=$(q "insert into workspaces (name) values ('fidelity') returning id")
+AUTHZ="Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+BODY="[{\"workspace_id\":\"$WS0\",\"preferred\":\"A\",\"note\":\"x\"},{\"workspace_id\":\"$WS0\",\"preferred\":\"B\"}]"
+OUT=$(curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/terms?columns=%22workspace_id%22,%22preferred%22,%22note%22" -H "$AUTHZ" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -d "$BODY")
+check "mixed-key batch without missing=default is rejected by NOT NULL" "$(echo "$OUT" | grep -c 'note.*violates not-null constraint')" "1"
+OUT=$(curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/terms?columns=%22workspace_id%22,%22preferred%22,%22note%22" -H "$AUTHZ" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -H "Prefer: missing=default" -d "$BODY")
+check "same batch with missing=default uses the column default" "$(q "select count(*) from terms where workspace_id = '$WS0' and note = ''")" "1"
+q "delete from terms where workspace_id = '$WS0'; delete from workspaces where id = '$WS0'" >/dev/null
+
 echo "· run 1 (empty database)"
 npm run -s seed > /tmp/seed-run1.log
 FIRST=$(snapshot)
@@ -59,6 +71,9 @@ check "Brand Kit: palette, logos, confidential terms present" \
 check "sample fact findings cite a real fact" \
   "$(q "select count(*) from findings f join facts x on x.id=f.fact_id where f.engine='demo'")" \
   "$(q "select count(*) from findings where engine='demo'")"
+check "no finding stored without a status" "$(q "select count(*) from findings where status is null")" "0"
+check "single sample drafts mix open and resolved findings (the batch that failed in production)" \
+  "$(q "select count(*) > 0 from (select draft_id from findings group by draft_id having bool_or(status = 'open') and bool_or(status <> 'open')) x")" "t"
 check "image drafts have measured images" "$(q "select count(*) from draft_images where analysis is not null")" "2"
 
 echo "· run 2 and 3 (must add nothing)"
@@ -92,11 +107,24 @@ check "Kabir (creator) sees the workspace drafts" "$(as_user "$KABIR" "select co
 check "Kabir cannot edit another author's draft" "$(as_user "$KABIR" "with u as (update drafts set title = 'x' where author_id <> '$KABIR' returning 1) select count(*) from u")" "0"
 q "delete from profiles where id = '33333333-3333-4333-8333-333333333333'; delete from auth.users where id = '33333333-3333-4333-8333-333333333333'; delete from workspaces where id = '22222222-2222-4222-8222-222222222222'" >/dev/null
 
-echo "· an interrupted run is completed, not duplicated"
-VICTIM=$(q "select id from drafts where title='Referral programme post'")
-q "delete from draft_versions where draft_id='$VICTIM'" >/dev/null
+echo "· a run interrupted at the findings insert (exact production state) is completed in place"
+# Recreate what the failed production run left: a sample draft and its version 1, but no findings and no events.
+HERO=$(q "select id from drafts where title='Homepage hero refresh'")
+HERO_CREATED=$(q "select created_at from drafts where id='$HERO'")
+q "delete from draft_events where draft_id='$HERO'; delete from findings where draft_id='$HERO'" >/dev/null
 npm run -s seed > /tmp/seed-run5.log
-check "half-written sample repaired" "$(q "select count(*) from draft_versions where draft_id='$VICTIM'")" "2"
+check "seed reports one sample completed after an interrupted run" "$(grep -c 'sample drafts: 0 added, 1 completed after an interrupted run' /tmp/seed-run5.log)" "1"
+check "same draft row kept (id and created_at unchanged)" "$(q "select created_at from drafts where id='$HERO'")" "$HERO_CREATED"
+check "its findings were added, open and resolved together" "$(q "select string_agg(distinct status::text, ',' order by status::text) from findings where draft_id='$HERO'")" "accepted,edited,open"
+check "its events were added" "$(q "select count(*) > 0 from draft_events where draft_id='$HERO'")" "t"
+check "still exactly one copy" "$(q "select count(*) from drafts where title='Homepage hero refresh'")" "1"
+
+echo "· a run interrupted after the draft row (no versions yet) is completed in place"
+VICTIM=$(q "select id from drafts where title='Referral programme post'")
+q "delete from draft_events where draft_id='$VICTIM'; delete from draft_versions where draft_id='$VICTIM'" >/dev/null
+npm run -s seed > /tmp/seed-run6.log
+check "versions restored" "$(q "select count(*) from draft_versions where draft_id='$VICTIM'")" "2"
 check "still exactly one copy" "$(q "select count(*) from drafts where title='Referral programme post'")" "1"
+check "counts back to the full set" "$(snapshot)" "$BEFORE"
 
 [ $fail = 0 ] && echo "seed idempotency: all checks passed" || { echo "seed idempotency: FAILED"; exit 1; }

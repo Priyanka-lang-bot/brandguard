@@ -242,24 +242,66 @@ async function loadWorkspaceKit(admin: SupabaseClient, workspace_id: string, fin
   return kit;
 }
 
+type SeedState = "new" | "resume" | "skip";
+
 /**
- * Returns true when the sample draft with this id (or the same author + title, e.g. from an older seed) already
- * exists. A half-written sample (created by an interrupted run: our id, demo_seed, no versions) is removed so the
- * run can finish it; nothing else is ever deleted.
+ * Where a sample draft stands:
+ *  - "skip":   it is complete (its activity events exist; they are always written last), it is not a sample
+ *              (demo_seed = false), or the same author already has a draft with this title (e.g. from an older seed);
+ *  - "resume": our sample draft exists but an earlier run stopped part-way (no events yet). The missing steps are
+ *              completed in place; nothing is deleted or overwritten;
+ *  - "new":    nothing there yet.
  */
-async function alreadySeeded(admin: SupabaseClient, id: string, author: string, title: string | null, finalRound: boolean): Promise<boolean> {
+async function seedState(admin: SupabaseClient, id: string, author: string, title: string | null, finalRound: boolean): Promise<SeedState> {
   const { data: row } = await admin.from("drafts").select(finalRound ? "id, demo_seed" : "id").eq("id", id).maybeSingle();
   if (row) {
-    const { data: v } = await admin.from("draft_versions").select("id").eq("draft_id", id).limit(1);
-    if (v?.length || (finalRound && !(row as { demo_seed?: boolean }).demo_seed)) return true;
-    await admin.from("drafts").delete().eq("id", id);
-    return false;
+    if (finalRound && !(row as { demo_seed?: boolean }).demo_seed) return "skip";
+    const { data: ev } = await admin.from("draft_events").select("id").eq("draft_id", id).limit(1);
+    return ev?.length ? "skip" : "resume";
   }
   if (title) {
     const { data: same } = await admin.from("drafts").select("id").eq("author_id", author).eq("title", title).limit(1);
-    if (same?.length) return true;
+    if (same?.length) return "skip";
   }
-  return false;
+  return "new";
+}
+
+/** Returns the id of a draft version, inserting it only if it does not exist yet (unique on draft_id + version_no). */
+async function ensureVersion(admin: SupabaseClient, draft_id: string, version_no: number, fields: Record<string, unknown>): Promise<string> {
+  const { data: have } = await admin.from("draft_versions").select("id").eq("draft_id", draft_id).eq("version_no", version_no).maybeSingle();
+  if (have) return (have as { id: string }).id;
+  return one(await admin.from("draft_versions").insert({ draft_id, version_no, ...fields }).select("id").single(), `insert version ${version_no}`).id as string;
+}
+
+type FindingResolution = { status: "accepted" | "edited" | "disputed"; resolution_text: string | null; dispute_reason: string | null; resolved_by: string; resolved_at: string };
+type StoredFinding = { id: string; start_idx: number; end_idx: number; status: string; resolution_text: string | null; image_id?: string | null };
+
+/**
+ * A complete findings row. Every row sets status and the resolution columns explicitly: in a batch insert,
+ * supabase-js sends the union of all rows' keys and PostgREST stores NULL (not the column default) for a key a
+ * row lacks, so an open row without "status" next to a resolved row with it violates findings.status NOT NULL.
+ */
+export function findingRow(c: Candidate, version_id: string, draft_id: string, created_at: string, resolution?: FindingResolution): Record<string, unknown> {
+  return {
+    ...toRow(c, version_id, draft_id),
+    created_at,
+    status: "open",
+    resolution_text: null,
+    dispute_reason: null,
+    resolved_by: null,
+    resolved_at: null,
+    ...resolution,
+  };
+}
+
+async function storedFindings(admin: SupabaseClient, version_id: string): Promise<StoredFinding[]> {
+  return (must(await admin.from("findings").select("id, start_idx, end_idx, status, resolution_text, image_id").eq("version_id", version_id), "read findings") ?? []) as StoredFinding[];
+}
+
+function textResolutions(rows: StoredFinding[]) {
+  return rows
+    .filter((f) => (f.status === "accepted" || f.status === "edited") && !f.image_id && f.resolution_text !== null)
+    .map((f) => ({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text as string }));
 }
 
 interface SeedImage {
@@ -353,11 +395,14 @@ function decide(f: { quote: string; suggestion: string; image_id?: string | null
   return { status: "disputed", reason: "Reviewed and kept as written." };
 }
 
-async function seedShowcaseDraft(admin: SupabaseClient, workspace_id: string, ids: Ids, kit: BrandKit, d: ShowcaseDraft, now: number, finalRound: boolean) {
+type SeedOutcome = "created" | "repaired" | "skipped";
+
+async function seedShowcaseDraft(admin: SupabaseClient, workspace_id: string, ids: Ids, kit: BrandKit, d: ShowcaseDraft, now: number, finalRound: boolean): Promise<SeedOutcome> {
   const id = demoUuid(workspace_id, `showcase:${d.key}`);
   const author = d.author === "creator" ? ids.creator : ids.creator2;
-  if (await alreadySeeded(admin, id, author, d.title, finalRound)) return false;
-  if (d.image && !finalRound) return false;
+  if (d.image && !finalRound) return "skipped";
+  const state = await seedState(admin, id, author, d.title, finalRound);
+  if (state === "skip") return "skipped";
 
   const created = now - d.daysAgo * DAY - 2 * HOUR;
   const resolvedAt = created + 40 * 60_000;
@@ -367,81 +412,78 @@ async function seedShowcaseDraft(admin: SupabaseClient, workspace_id: string, id
   const sent = reviewed || d.outcome === "in_review";
   const last = reviewed ? decided : sent ? submitted : resolvedAt;
 
-  must(
-    await admin.from("drafts").insert({
-      id,
-      workspace_id,
-      author_id: author,
-      title: d.title,
-      purpose: d.purpose,
-      channel: d.channel,
-      status: d.outcome === "unchecked" || d.outcome === "analysed" ? "draft" : d.outcome,
-      current_version: sent ? 2 : 1,
-      reviewer_id: reviewed ? ids.reviewer : null,
-      created_at: iso(created),
-      updated_at: iso(last),
-      ...(finalRound ? { demo_seed: true } : {}),
-    }),
-    "insert draft",
-  );
+  if (state === "new")
+    must(
+      await admin.from("drafts").insert({
+        id,
+        workspace_id,
+        author_id: author,
+        title: d.title,
+        purpose: d.purpose,
+        channel: d.channel,
+        status: d.outcome === "unchecked" || d.outcome === "analysed" ? "draft" : d.outcome,
+        current_version: sent ? 2 : 1,
+        reviewer_id: reviewed ? ids.reviewer : null,
+        created_at: iso(created),
+        updated_at: iso(last),
+        ...(finalRound ? { demo_seed: true } : {}),
+      }),
+      "insert draft",
+    );
   const checked = d.outcome !== "unchecked";
-  const v1 = one(
-    await admin
-      .from("draft_versions")
-      .insert({ draft_id: id, version_no: 1, content: d.content, created_by: author, note: "First draft", checked, ai_checked: false, created_at: iso(created) })
-      .select("id")
-      .single(),
-    "insert version",
-  );
+  const v1 = await ensureVersion(admin, id, 1, { content: d.content, created_by: author, note: "First draft", checked, ai_checked: false, created_at: iso(created) });
   const events: Record<string, unknown>[] = [{ draft_id: id, actor_id: author, action: "created", detail: "Draft created (sample data)", version_no: 1, created_at: iso(created) }];
 
-  let cands: Candidate[] = [];
+  let stored: StoredFinding[] = [];
   if (checked) {
-    const text = await runCheck(d.content, d, kit, { ai: false });
-    cands = [...text.findings, ...factCandidates(d, d.content, kit)];
+    // The findings insert is one statement, so after an interrupted run they are either all there or all missing.
+    stored = await storedFindings(admin, v1);
+    type SeededImage = { id: string; file_name: string; alt_text: string; analysis: ImageAnalysis };
+    let img: SeededImage | null = null;
     if (d.image) {
       const spec = IMAGES[d.image];
-      const { img, analysis } = await attachSeedImage(admin, workspace_id, id, author, spec, iso(created));
-      const imageText = await runCheck(analysis.extractedText, d, kit, { ai: false });
-      cands.push(...imageFindings({ id: img.id, file_name: img.file_name, alt_text: img.alt_text, analysis }, kit), ...tagImageTextFindings(imageText.findings, img.id));
+      const { data: haveImg } = await admin.from("draft_images").select("id, file_name, alt_text, analysis").eq("draft_id", id).limit(1);
+      if (haveImg?.length) img = haveImg[0] as SeededImage;
+      else {
+        const a = await attachSeedImage(admin, workspace_id, id, author, spec, iso(created));
+        img = { ...a.img, analysis: a.analysis } as SeededImage;
+      }
       events.push({ draft_id: id, actor_id: author, action: "image_added", detail: spec.file, version_no: 1, created_at: iso(created) });
     }
-    const imgCount = d.image ? " · 1 image checked" : "";
+    if (!stored.length) {
+      const text = await runCheck(d.content, d, kit, { ai: false });
+      const cands: Candidate[] = [...text.findings, ...factCandidates(d, d.content, kit)];
+      if (img) {
+        const imageText = await runCheck(img.analysis.extractedText, d, kit, { ai: false });
+        cands.push(...imageFindings(img, kit), ...tagImageTextFindings(imageText.findings, img.id));
+      }
+      // Resolve findings the way the author would have.
+      const rows = cands.map((c, i) => {
+        if (!(sent || (d.resolveFirst ?? 0) > i)) return findingRow(c, v1, id, iso(created + 60_000));
+        const plan = decide({ quote: c.quote, suggestion: c.suggestion, image_id: c.image_id }, d.decisions);
+        return findingRow(c, v1, id, iso(created + 60_000), {
+          status: plan.status === "accepted" && plan.text ? "edited" : plan.status,
+          resolution_text: plan.status === "disputed" ? null : (plan.text ?? c.suggestion),
+          dispute_reason: plan.reason ?? null,
+          resolved_by: author,
+          resolved_at: iso(resolvedAt),
+        });
+      });
+      if (rows.length) stored = (must(await admin.from("findings").insert(rows).select("id, start_idx, end_idx, status, resolution_text, image_id"), "insert findings") ?? []) as StoredFinding[];
+    }
     events.push({
       draft_id: id,
       actor_id: author,
       action: "checked",
-      detail: `${cands.length} findings${imgCount} — rule checks only; sample data is seeded without the AI pass`,
+      detail: `${stored.length} findings${d.image ? " · 1 image checked" : ""} — rule checks only; sample data is seeded without the AI pass`,
       version_no: 1,
       created_at: iso(created + 60_000),
     });
   }
 
-  // Resolve findings the way the author would have.
-  const resolveAll = sent;
-  const resolutions: { id: string; start: number; end: number; text: string }[] = [];
-  let disputed = 0;
-  if (cands.length) {
-    const rows = cands.map((c, i) => {
-      const row: Record<string, unknown> = { ...toRow(c, v1.id, id), created_at: iso(created + 60_000) };
-      if (!(resolveAll || (d.resolveFirst ?? 0) > i)) return row;
-      const plan = decide({ quote: c.quote, suggestion: c.suggestion, image_id: c.image_id }, d.decisions);
-      const text = plan.status === "disputed" ? null : (plan.text ?? c.suggestion);
-      if (plan.status === "disputed") disputed++;
-      return { ...row, status: plan.status === "accepted" && plan.text ? "edited" : plan.status, resolution_text: text, dispute_reason: plan.reason ?? null, resolved_by: author, resolved_at: iso(resolvedAt) };
-    });
-    const inserted = must(await admin.from("findings").insert(rows).select("id, start_idx, end_idx, status, resolution_text, image_id"), "insert findings") ?? [];
-    for (const f of inserted)
-      if ((f.status === "accepted" || f.status === "edited") && !f.image_id && f.resolution_text !== null)
-        resolutions.push({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text });
-  }
-
   if (sent) {
-    const v2 = applyResolutions(d.content, resolutions).text;
-    must(
-      await admin.from("draft_versions").insert({ draft_id: id, version_no: 2, content: v2, created_by: author, note: "Fixes applied", created_at: iso(submitted - 5 * 60_000) }),
-      "insert version 2",
-    );
+    const disputed = stored.filter((f) => f.status === "disputed").length;
+    await ensureVersion(admin, id, 2, { content: applyResolutions(d.content, textResolutions(stored)).text, created_by: author, note: "Fixes applied", created_at: iso(submitted - 5 * 60_000) });
     events.push({
       draft_id: id,
       actor_id: author,
@@ -452,11 +494,11 @@ async function seedShowcaseDraft(admin: SupabaseClient, workspace_id: string, id
     });
     for (const c of d.comments ?? [])
       events.push({ draft_id: id, actor_id: c.by === "author" ? author : ids.reviewer, action: "comment", detail: c.text, version_no: 2, created_at: iso(created + c.afterHours * HOUR) });
-    if (reviewed)
-      events.push({ draft_id: id, actor_id: ids.reviewer, action: d.outcome, detail: d.decisionNote ?? "", version_no: 2, created_at: iso(decided) });
+    if (reviewed) events.push({ draft_id: id, actor_id: ids.reviewer, action: d.outcome, detail: d.decisionNote ?? "", version_no: 2, created_at: iso(decided) });
   }
+  // Events last: their presence marks the sample as complete.
   must(await admin.from("draft_events").insert(events), "insert events");
-  return true;
+  return state === "new" ? "created" : "repaired";
 }
 
 /** Eight weeks of clearly marked demo history (drafts.demo_seed = true) so Insights has data to compute from. */
@@ -482,65 +524,54 @@ async function seedHistory(admin: SupabaseClient, workspace_id: string, ids: Ids
   });
 
   let made = 0;
+  let repaired = 0;
   for (let start = 0; start < plans.length; start += 6) {
-    const done = await Promise.all(
-      plans.slice(start, start + 6).map(async (p) => {
-        if (await alreadySeeded(admin, p.id, p.author, null, true)) return false;
-        const status = p.outcome;
-        must(
-          await admin.from("drafts").insert({
-            id: p.id,
-            workspace_id,
-            author_id: p.author,
-            title: p.tpl.title,
-            purpose: p.tpl.purpose,
-            channel: p.tpl.channel,
-            status,
-            current_version: p.outcome === "draft" ? 1 : 2,
-            reviewer_id: p.outcome === "draft" ? null : ids.reviewer,
-            demo_seed: true,
-            created_at: iso(p.created),
-            updated_at: iso(p.created + (p.submitHours + p.reviewHours) * HOUR),
-          }),
-          "insert history draft",
-        );
-        const v1 = one(
-          await admin
-            .from("draft_versions")
-            .insert({ draft_id: p.id, version_no: 1, content: p.tpl.content, created_by: p.author, note: "First draft", checked: true, ai_checked: false, created_at: iso(p.created) })
-            .select("id")
-            .single(),
-          "insert history version",
-        );
-        const res = await runCheck(p.tpl.content, p.tpl, kit, { ai: false });
-        const resolutions: { id: string; start: number; end: number; text: string }[] = [];
-        const rows = res.findings.map((c) => {
-          const code = c.source_label.split(" · ")[0];
-          const row: Record<string, unknown> = { ...toRow(c, v1.id, p.id), created_at: iso(p.created) };
-          if (p.outcome === "draft" && p.rnd() < 0.6) return row; // still open
-          if (p.rnd() < (DISPUTE_PROBABILITY[code] ?? 0.08)) {
-            Object.assign(row, { status: "disputed", dispute_reason: DISPUTE_REASONS[code] ?? "Kept as written for this channel.", resolved_by: p.author, resolved_at: iso(p.created + HOUR) });
-          } else {
+    const settled = await Promise.allSettled(
+      plans.slice(start, start + 6).map(async (p): Promise<SeedOutcome> => {
+        const state = await seedState(admin, p.id, p.author, null, true);
+        if (state === "skip") return "skipped";
+        if (state === "new")
+          must(
+            await admin.from("drafts").insert({
+              id: p.id,
+              workspace_id,
+              author_id: p.author,
+              title: p.tpl.title,
+              purpose: p.tpl.purpose,
+              channel: p.tpl.channel,
+              status: p.outcome,
+              current_version: p.outcome === "draft" ? 1 : 2,
+              reviewer_id: p.outcome === "draft" ? null : ids.reviewer,
+              demo_seed: true,
+              created_at: iso(p.created),
+              updated_at: iso(p.created + (p.submitHours + p.reviewHours) * HOUR),
+            }),
+            "insert history draft",
+          );
+        const v1 = await ensureVersion(admin, p.id, 1, { content: p.tpl.content, created_by: p.author, note: "First draft", checked: true, ai_checked: false, created_at: iso(p.created) });
+        let stored = await storedFindings(admin, v1);
+        if (!stored.length) {
+          const res = await runCheck(p.tpl.content, p.tpl, kit, { ai: false });
+          const at = iso(p.created);
+          const done = iso(p.created + HOUR);
+          const rows = res.findings.map((c) => {
+            const code = c.source_label.split(" · ")[0];
+            if (p.outcome === "draft" && p.rnd() < 0.6) return findingRow(c, v1, p.id, at); // still open
+            if (p.rnd() < (DISPUTE_PROBABILITY[code] ?? 0.08))
+              return findingRow(c, v1, p.id, at, { status: "disputed", resolution_text: null, dispute_reason: DISPUTE_REASONS[code] ?? "Kept as written for this channel.", resolved_by: p.author, resolved_at: done });
             const text = c.suggestion || (code === "ACC-1" ? "See the guide" : c.quote);
-            Object.assign(row, { status: c.suggestion ? "accepted" : "edited", resolution_text: text, resolved_by: p.author, resolved_at: iso(p.created + HOUR) });
-          }
-          return row;
-        });
-        if (rows.length) {
-          const inserted = must(await admin.from("findings").insert(rows).select("id, start_idx, end_idx, status, resolution_text"), "insert history findings") ?? [];
-          for (const f of inserted) if (f.status === "accepted" || f.status === "edited") resolutions.push({ id: f.id, start: f.start_idx, end: f.end_idx, text: f.resolution_text ?? "" });
+            return findingRow(c, v1, p.id, at, { status: c.suggestion ? "accepted" : "edited", resolution_text: text, dispute_reason: null, resolved_by: p.author, resolved_at: done });
+          });
+          if (rows.length) stored = (must(await admin.from("findings").insert(rows).select("id, start_idx, end_idx, status, resolution_text, image_id"), "insert history findings") ?? []) as StoredFinding[];
         }
         const events: Record<string, unknown>[] = [
           { draft_id: p.id, actor_id: p.author, action: "created", detail: "Draft created (demo history)", version_no: 1, created_at: iso(p.created) },
-          { draft_id: p.id, actor_id: p.author, action: "checked", detail: `${rows.length} findings — rule checks only (demo history)`, version_no: 1, created_at: iso(p.created + 60_000) },
+          { draft_id: p.id, actor_id: p.author, action: "checked", detail: `${stored.length} findings — rule checks only (demo history)`, version_no: 1, created_at: iso(p.created + 60_000) },
         ];
         if (p.outcome !== "draft") {
           const submitted = p.created + p.submitHours * HOUR;
           const decided = submitted + p.reviewHours * HOUR;
-          must(
-            await admin.from("draft_versions").insert({ draft_id: p.id, version_no: 2, content: applyResolutions(p.tpl.content, resolutions).text, created_by: p.author, note: "Fixes applied", created_at: iso(submitted) }),
-            "insert history version 2",
-          );
+          await ensureVersion(admin, p.id, 2, { content: applyResolutions(p.tpl.content, textResolutions(stored)).text, created_by: p.author, note: "Fixes applied", created_at: iso(submitted) });
           events.push({ draft_id: p.id, actor_id: p.author, action: "submitted", detail: "Sent for review", version_no: 2, created_at: iso(submitted) });
           events.push(
             p.outcome === "approved"
@@ -549,12 +580,17 @@ async function seedHistory(admin: SupabaseClient, workspace_id: string, ids: Ids
           );
         }
         must(await admin.from("draft_events").insert(events), "insert history events");
-        return true;
+        return state === "new" ? "created" : "repaired";
       }),
     );
-    made += done.filter(Boolean).length;
+    const failed = settled.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (failed) throw failed.reason;
+    const done = settled.map((r) => (r.status === "fulfilled" ? r.value : "skipped"));
+    made += done.filter((o) => o === "created").length;
+    repaired += done.filter((o) => o === "repaired").length;
   }
-  count(s, "history drafts", made, 24 - made);
+  count(s, "history drafts", made, 24 - made - repaired);
+  if (repaired) count(s, "history drafts completed after an interrupted run", repaired, 0);
 }
 
 /** Safe, idempotent demo seed. See the comment at the top of this file. */
@@ -574,12 +610,21 @@ export async function ensureDemoData(admin: SupabaseClient, log: Log = () => {})
   const kit = await loadWorkspaceKit(admin, workspace_id, finalRound);
   const now = Date.now();
   let made = 0;
+  let repaired = 0;
   for (let i = 0; i < SHOWCASE.length; i += 4) {
-    const done = await Promise.all(SHOWCASE.slice(i, i + 4).map((d) => seedShowcaseDraft(admin, workspace_id, ids, kit, d, now, finalRound)));
-    made += done.filter(Boolean).length;
+    // allSettled: one failing draft must not leave its batch-mates running unobserved after this call returns.
+    const results = await Promise.allSettled(SHOWCASE.slice(i, i + 4).map((d) => seedShowcaseDraft(admin, workspace_id, ids, kit, d, now, finalRound)));
+    const failed = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (failed) throw failed.reason;
+    for (const r of results) {
+      if (r.status !== "fulfilled") continue;
+      if (r.value === "created") made++;
+      if (r.value === "repaired") repaired++;
+    }
   }
-  count(s, "sample drafts", made, SHOWCASE.length - made);
-  log(`sample drafts: ${made} added, ${SHOWCASE.length - made} already present`);
+  count(s, "sample drafts", made, SHOWCASE.length - made - repaired);
+  if (repaired) count(s, "sample drafts completed after an interrupted run", repaired, 0);
+  log(`sample drafts: ${made} added, ${repaired} completed after an interrupted run, ${SHOWCASE.length - made - repaired} already present`);
   if (finalRound) {
     await seedHistory(admin, workspace_id, ids, kit, now, s);
     log(`history drafts: ${s.created["history drafts"]} added, ${s.skipped["history drafts"]} already present`);

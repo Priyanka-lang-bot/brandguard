@@ -124,9 +124,9 @@ vision mode, which is the honest end-to-end number, runs automatically in CI onc
 
 | Command | What it runs |
 | --- | --- |
-| `npm test` | 42 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
+| `npm test` | 43 unit and integration tests: check engine, masking on every AI call path (captured request payloads), Gemini timeout fallback, image analysis incl. the poster acceptance test and logo misuse, insights maths, Brand Kit retrieval |
 | `npm run test:sql` | Applies migrations 0001–0003 to a local Postgres 15+ and runs the RLS and insights-view tests (workspace isolation, roles, storage folders), plus the migration 0003 safety test (fresh, re-run, populated database, missing 0002) |
-| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks), robustness checks (18: bad input, refresh, double actions, broken URLs, permissions), the scroll-driven demo (37), dark/light theme checks and the demo-seed safety test (idempotency, preservation, RLS isolation), against local stand-ins for Supabase and Gemini |
+| `bash tests/e2e/run.sh` | Full judge journey in Playwright (49 checks), robustness checks (21: bad input, refresh, double actions, re-check with a dispute, broken URLs, permissions), the scroll-driven demo (37), dark/light theme checks and the demo-seed safety test (idempotency, preservation, RLS isolation), against local stand-ins for Supabase and Gemini |
 | `npm run eval` | Text accuracy evaluation (see above) |
 | `npm run eval:images` | Image accuracy evaluation (see above) |
 

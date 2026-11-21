@@ -43,6 +43,11 @@ or run `gh auth login` / refresh the token with that scope. Vercel deploys autom
 
 ## 3. Add the sample data on production — 1 minute (after Vercel shows "Ready")
 
+**If you already clicked it on `1701999` and saw "insert findings: null value in column status…":** that was a bug, fixed in
+the next commit. The failed click added the Brand Kit sample entries and left at most a few sample drafts part-way (for example
+"Homepage hero refresh" with a version but no findings). Push the fix, wait for "Ready", and click **+ Add sample data** again:
+it completes those drafts in place and adds the rest. Nothing is deleted.
+
 Sign in as **Asha · Admin** → **Brand Kit** → **+ Add sample data** → confirm. The page reloads.
 
 - It only **adds** what is missing: Brand Kit entries, palette, logos, Confidential Terms, 17 sample drafts across every status

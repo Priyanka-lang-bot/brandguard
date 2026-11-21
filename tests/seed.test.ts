@@ -27,3 +27,18 @@ test("sample catalogue is internally consistent", () => {
   for (const o of ["unchecked", "analysed", "in_review", "changes_requested", "approved"])
     assert.ok(SHOWCASE.some((d) => d.outcome === o && d.author === "creator"), `creator has a ${o} sample`);
 });
+
+test("every findings row carries status and resolution columns, so a batch never mixes keys (production bug 21 Nov)", async () => {
+  const { findingRow } = await import("../src/lib/seed");
+  const c = {
+    category: "tone", severity: "low", quote: "!!", start: 0, end: 2, source_type: "rule", source_id: "r1",
+    source_label: "TONE-2 · Calm", explanation: "x", suggestion: "!", engine: "rules",
+  } as unknown as Parameters<typeof findingRow>[0];
+  const open = findingRow(c, "v1", "d1", "2026-11-21T00:00:00Z");
+  const resolved = findingRow(c, "v1", "d1", "2026-11-21T00:00:00Z", {
+    status: "accepted", resolution_text: "!", dispute_reason: null, resolved_by: "u1", resolved_at: "2026-11-21T01:00:00Z",
+  });
+  assert.equal(open.status, "open");
+  assert.deepEqual(Object.keys(open).sort(), Object.keys(resolved).sort(), "open and resolved rows have identical keys");
+  for (const k of ["status", "resolution_text", "dispute_reason", "resolved_by", "resolved_at"]) assert.ok(k in open, `${k} is explicit`);
+});

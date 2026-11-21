@@ -58,6 +58,23 @@ async def main():
         await page.wait_for_timeout(2000)
         await page.reload()
         ok("refresh keeps the accepted fix", await page.locator(f"#{cid}").get_by_text("Fix accepted").count() == 1)
+
+        # Re-check with a disputed finding carried over (production bug 21 Nov: the carried "disputed" row and the new
+        # rows without a status went in one batch, and PostgREST stored NULL in findings.status).
+        did = await page.locator("article[id^=finding-]").filter(has=page.get_by_role("button", name="Dispute", disabled=False)).first.get_attribute("id")
+        disp = page.locator(f"#{did}")
+        disputed_quote = (await disp.locator("p").first.inner_text()).strip()
+        await disp.get_by_role("button", name="Dispute").click()
+        await disp.locator("textarea").fill("Robustness check: kept on purpose.")
+        await disp.get_by_role("button", name="Record dispute").click()
+        await page.wait_for_timeout(1500)
+        await page.get_by_role("button", name="Apply fixes & re-check").click()
+        await page.wait_for_timeout(6000)
+        alert_text = " ".join(await page.locator("[role=alert]").all_inner_texts())
+        ok("re-check with a carried-over dispute succeeds (no NOT NULL error)", "null value" not in alert_text and "violates" not in alert_text, alert_text[:160])
+        body = await page.inner_text("main")
+        ok("re-check created version 2", "version 2" in body, body[:120])
+        ok("the dispute was carried into the new version", "version 2" in body and await page.get_by_text("Robustness check: kept on purpose.").count() >= 1, disputed_quote)
         ok("no error banner after double accept", await page.locator("[role=alert]:has-text('rror')").count() == 0)
 
         # Resolve everything, then double-click Send for review

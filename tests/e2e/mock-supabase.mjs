@@ -153,9 +153,12 @@ async function rest(req, res, url, who) {
         const r = await c.query(`select string_agg(a.attname, ',') k from pg_index i join pg_attribute a on a.attrelid=i.indrelid and a.attnum = any(i.indkey) where i.indrelid = $1::regclass and i.indisprimary`, [`public.${table}`]);
         pk = r.rows[0].k;
       }
-      // Columns missing from a row get their column default, like PostgREST with missing=default.
+      // Like PostgREST: the column list is the union of all rows' keys (supabase-js sends it as ?columns=). A key a row
+      // lacks becomes NULL, except with "Prefer: missing=default", which supabase-js only sends for
+      // insert(..., { defaultToNull: false }). Columns no row mentions are left to their database defaults.
       const sel = cols.map((col) => `case when r.j ? '${col.replace(/'/g, "")}' then (jsonb_populate_record(null::public.${t}, r.j)).${ident(col)} else null end`).join(", ");
-      const defaults = await c.query(`select attname, pg_get_expr(adbin, adrelid) d from pg_attrdef join pg_attribute on attrelid=adrelid and attnum=adnum where adrelid=$1::regclass`, [`public.${table}`]);
+      const missingDefault = prefer.includes("missing=default");
+      const defaults = missingDefault ? await c.query(`select attname, pg_get_expr(adbin, adrelid) d from pg_attrdef join pg_attribute on attrelid=adrelid and attnum=adnum where adrelid=$1::regclass`, [`public.${table}`]) : { rows: [] };
       const defMap = Object.fromEntries(defaults.rows.map((r) => [r.attname, r.d]));
       const selWithDefaults = cols.map((col) => {
         const v = `(jsonb_populate_record(null::public.${t}, r.j)).${ident(col)}`;

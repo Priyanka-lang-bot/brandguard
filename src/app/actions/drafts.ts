@@ -92,7 +92,10 @@ async function addCheckedVersion(
   const now = new Date().toISOString();
   const all = [...result.findings, ...imageResult.findings];
   const rows = all.map((c) => {
-    const row: Record<string, unknown> = toRow(c, version.id, draft.id);
+    // Status and resolution columns are always explicit: in a batch insert PostgREST stores NULL (not the column
+    // default) for a key some rows lack, so a carried-over "disputed" row next to rows without "status" would
+    // violate findings.status NOT NULL.
+    const row: Record<string, unknown> = { ...toRow(c, version.id, draft.id), status: "open", dispute_reason: null, resolved_by: null, resolved_at: null };
     const match = carried.find(
       (d) =>
         d.quote === c.quote &&
